@@ -63,9 +63,55 @@ BOOL CreateDirectoryW(LPCWSTR lpPathName, ...);
 - `LPTSTR`: `TCHAR` sequence (generic)
 
 #### Linux
-Non-ASCII as `UTF-8`.
+Non-ASCII as `UTF-8`
+
+### POSIX
+*Portable Operating System Interface*, low-level API standard and set of shell commands.
+Windows and macOS are fully POSIX compliant, Windows and Android only partially.
 
 # 2. Il modello di esecuzione
+
+#### Innalzamento di privilegio
+- Softare interrupt (trap)
+- `SYSENTER`/`SYSEXIT`, on modern processors
+
+#### Creazione di un processo
+- Creazione dello spazio di indizzamento
+    - Insieme di locazioni di memoria accessibili tramite indirizzo virtuale.
+    - Gestito dalla MMU
+    - Nuova entry nella `GDT` (Global Descriptor Table)
+    - **File eseguibile**: code, data, stack and heap
+        - Formato ELF su Linux e PE2 su Windows.
+        - Caricato dal loader.
+    - All'inizio è vuoto, e ci saranno page faults
+- Caricamento dell'eseguibile in memoria
+- Caricamento delle librerie
+    - DLLs (la shared già presenti non vengono ricaricate)
+- Avvio dell'esecuzione
+    - `main(int argc, char** argv)` fino a `exit()`
+
+##### GCC/Linux start function
+```c
+int __libc_start_main(
+    int (*main)(int, char**, char**), // code
+    int argc,
+    char** ubp_av,
+    void (*init)(void), // inizializza variabili globali
+    void (*fini)(void), // distrugge variabili globali in ordine inverso
+    void (*rtld_fini)(void), // 'run-time loader finish', il loader de-mappa
+    void* stack_end // quanto stack ha a disposizione
+    // verra' eseguita una exit() alla fine
+);
+```
+
+##### Windows start function
+Funziona allo stesso modo. Ne esistono 4:
+|              | Unicode | Mode    |
+|--------------|---------|---------|
+| `main()`     | no      | console |
+| `wmain()`    | yes     | console |
+| `WinMain()`  | no      | gui     |
+| `wWinMain()` | yes     | gui     |
 
 # 3. Allocazione della memoria
 
