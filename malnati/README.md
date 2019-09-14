@@ -113,6 +113,9 @@ Funziona allo stesso modo. Ne esistono 4:
 | `WinMain()`  | no      | gui     |
 | `wWinMain()` | yes     | gui     |
 
+#### Compiling with `-nostdlib`
+Take a look at the [example](ex1-nostdlib) ([guide](https://blogs.oracle.com/linux/hello-from-a-libc-free-world-part-1-v2)).
+
 # 3. Allocazione della memoria
 
 # 4. Introduzione al C++
