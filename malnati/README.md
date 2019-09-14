@@ -106,6 +106,7 @@ int __libc_start_main(
 
 ##### Windows start function
 Funziona allo stesso modo. Ne esistono 4:
+
 |              | Unicode | Mode    |
 |--------------|---------|---------|
 | `main()`     | no      | console |
