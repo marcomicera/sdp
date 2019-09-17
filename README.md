@@ -79,9 +79,9 @@ Windows and macOS are fully POSIX compliant, Windows and Android only partially.
 - `SYSENTER`/`SYSEXIT`, on modern processors
 
 #### Creazione di un processo
-- Creazione dello spazio di indizzamento
+- Creazione dello **spazio di indizzamento**
     - Insieme di locazioni di memoria accessibili tramite indirizzo virtuale.
-    - Gestito dalla MMU
+    - La MMU traduce da virtuale a fisico (e lancia page faults)
     - Nuova entry nella `GDT` (Global Descriptor Table)
     - **File eseguibile**: code, data, stack and heap
         - Formato ELF su Linux e PE2 su Windows.
@@ -121,6 +121,46 @@ Funziona allo stesso modo. Ne esistono 4:
 Take a look at the [example](ex1-nostdlib) ([guide](https://blogs.oracle.com/linux/hello-from-a-libc-free-world-part-1-v2)).
 
 # 3. Allocazione della memoria
+
+##### MMU flags
+La MMU ha, per ogni pagina, un bit di:
+- Read
+- Write
+- Execute (fetchable)
+- [COW](https://en.wikipedia.org/wiki/Copy-on-write), copy-on-write, a.k.a. implicit sharing.
+    - When a resource is shared and the CPU wants to modify it, it has to copy it first.
+    - The copy operation is hence deferred to the first write. It's done with an interrupt.
+    - Utilizzato dalla `fork()` quando viene creato lo spazio di indirizzamento del child process.
+
+###### Accesso a locazioni non mappate
+- Segmentation fault on Linux
+- Access violation on Windows
+
+##### Ciclo di vita delle variabili 
+- Globali: prima dell'esecuzione del programma 
+- Locali: alla chiamata di una funzione 
+- Dinamiche (heap): da malloc() a free() 
+    - Ciclo di vita indipendente
+
+### Spazio di indirizzamento
+- Aree
+    - Stack
+        - Variabili locali
+        - Valori di ritorno
+        - Parametri
+    - Variabili globali
+        - Indirizzo fisso determinato dal compilatore e linker
+        - Inizializzate o non
+    - Heap
+        - `malloc()`
+
+### Allocazione statica e dinamica
+
+### Puntatori e il loro utilizzo
+
+### Allocazione in Linux
+
+### Allocazione in Windows
 
 # 4. Introduzione al C++
 
