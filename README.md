@@ -227,6 +227,20 @@ La MMU ha, per ogni pagina, un bit di:
         - Le aree di memoria diventano inaccessibili
 
 # 4. Introduzione al C++
+- Gli `static` fields sono nella memoria globale
+- Come evitare dangling pointers:
+    ```cpp
+    char* ptr = "String";
+    // ...
+    delete ptr;
+    ptr = NULL; // <---
+    ```
+    - Array dinamici
+        ```cpp
+        ptr = new[count] Something();
+        delete[] ptr;
+        ptr = NULL;
+        ```
 
 # 5. Gestione delle eccezioni
 
