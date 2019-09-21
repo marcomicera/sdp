@@ -243,7 +243,6 @@ La MMU ha, per ogni pagina, un bit di:
         ```
 
 # 5. Gestione delle eccezioni
-
 - `#include<std::exception>`
     - `what()` contiene il messaggio
     - `#include<stdexcept>`
@@ -265,6 +264,93 @@ La MMU ha, per ogni pagina, un bit di:
         - I distruttori non dovrebbero lanciare eccezioni
 
 # 6. Composizione di oggetti
+
+### Costruttore di copia
+```cpp
+class CBuffer {
+    int size;
+    char* ptr;
+public:
+    CBuffer(const CBuffer& source) {
+        this->size = source.size;
+        this->ptr = new char[size];
+        memcpy(this->ptr, source.ptr, size); 
+    }
+};
+```
+Per renderlo non copiabile, renderlo `private` e senza body.
+
+### Operatore di assegnazione
+Per oggetti gia' esistenti.
+```cpp
+CBuffer& operator=(const CBuffer& source) {
+    
+    // Altrimenti verrebbe eliminato l'oggetto corrente, e ci sarebbero errori durante la copia.
+    if (this != &source) {
+        
+        // Distruzione dell'oggetto corrente per evitare un memory leakage
+        delete[] this->ptr;
+        this->ptr = NULL; // evita dangling pointer se `new char[size]` fallisce successivamente.
+                          // `delete NULL;` e' lecito
+
+        // Copia di tutti i fields, come nel costruttore di copia
+        this->size = source.size;
+        this->ptr = new char[size]; // puo' lanciare un eccezione se non c'e' memoria
+        memcpy(this->ptr, source.ptr, size); 
+    }
+    
+    return *this; // allows '= chains'
+}
+```
+Per renderlo non assegnabile, renderlo `private` e senza body.
+
+### La regola dei tre
+Devono esistere tutte le tre seguenti funzioni, o nessuna:
+- Costruttore di copia
+- Operatore di assegnazione
+- Distruttore
+
+Altrimenti il compilatore fornira' la propria implementazione.
+
+### Movimento
+- "Svuotare" un oggetto che sta per essere distrutto del suo contenuto e "travasarlo" in un altro oggetto
+- Candidati al movimento:
+    - Variabili locali al termine del blocco in cui sono state definite
+    - Risultati di espressioni temporanee
+    - Oggetti anonimi costruiti a partire dal tipo per passarlo come parametro
+        ```cpp
+        function(std:string("ciao"));
+        ```
+    - Tutto cio' che non ha un nome e puo' comparire solo alla destra di `=` (*RVALUE*)
+- **Costruttore di movimento**
+    ```cpp
+    class CBuffer {
+        int size;
+        char* ptr;
+    public:
+        // Il compilatore decide quando usarlo, preferendolo a quello di copia
+        CBuffer(CBuffer&& source) { // '&&' = RValue reference
+            this->size = source.size;
+            this->ptr = source.ptr; // vantaggio
+            source.ptr = NULL; // l'originale viene modificato!
+        }
+    };
+    ```
+- Compiler's pseudocode:
+    ```cpp
+    Obj_MoveConstructor(dst, src);
+    Obj_Destructor(src)
+    ```
+- Esempio:
+    ```cpp
+    string f() {
+        string x("...");
+        string a(x); // x e' un LVALUE, percio' viene copiato
+        string b(a + x); // (a + x) e' un RVALUE, viene spostato
+        string c(funzioneCheRitornaString()); // Risultato mosso in c
+        return c; // c viene mosso nel risultato
+    }
+    ```
 
 # 7. Ereditarietà e polimorfismo
 
