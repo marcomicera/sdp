@@ -1,6 +1,10 @@
 # System calls, programming, embedded systems, etc.
 Course held by Prof. Malnati
 
+#### Useful links
+- [OneNote notes](https://1drv.ms/u/s!AkzjmTTkND1lhPVBx3kR1-NqPIPxTw)
+- [O.S. books](http://www.os-book.com/)
+
 # 1. Piattaforme di esecuzione
 
 ### Interfacciarsi con il sistema operativo
@@ -80,12 +84,12 @@ Windows and macOS are fully POSIX compliant, Windows and Android only partially.
 
 #### Creazione di un processo
 - Creazione dello **spazio di indizzamento**
-    - Insieme di locazioni di memoria accessibili tramite indirizzo virtuale.
+    - Insieme di locazioni di memoria accessibili tramite indirizzo virtuale
     - La MMU traduce da virtuale a fisico (e lancia page faults)
     - Nuova entry nella `GDT` (Global Descriptor Table)
     - **File eseguibile**: code, data, stack and heap
-        - Formato ELF su Linux e PE2 su Windows.
-        - Caricato dal loader.
+        - Formato ELF su Linux e PE2 su Windows
+        - Caricato dal loader
     - All'inizio è vuoto, e ci saranno page faults
 - Caricamento dell'eseguibile in memoria
 - Caricamento delle librerie
@@ -127,10 +131,10 @@ La MMU ha, per ogni pagina, un bit di:
 - Read
 - Write
 - Execute (fetchable)
-- [COW](https://en.wikipedia.org/wiki/Copy-on-write), copy-on-write, a.k.a. implicit sharing.
-    - When a resource is shared and the CPU wants to modify it, it has to copy it first.
-    - The copy operation is hence deferred to the first write. It's done with an interrupt.
-    - Utilizzato dalla `fork()` quando viene creato lo spazio di indirizzamento del child process.
+- [COW](https://en.wikipedia.org/wiki/Copy-on-write), copy-on-write, a.k.a. implicit sharing
+    - When a resource is shared and the CPU wants to modify it, it has to copy it first
+    - The copy operation is hence deferred to the first write. It's done with an interrupt
+    - Utilizzato dalla `fork()` quando viene creato lo spazio di indirizzamento del child process
 
 ###### Accesso a locazioni non mappate
 - Segmentation fault on Linux
@@ -143,24 +147,84 @@ La MMU ha, per ogni pagina, un bit di:
     - Ciclo di vita indipendente
 
 ### Spazio di indirizzamento
+- Diverse aree per garantire diversi tipi di accesso (R/W/X)
 - Aree
+    - Area protetta (ad uso dell'O.S.)
+    - Variabili d'ambiente
+    - Codice eseguibile
     - Stack
         - Variabili locali
+            - Ciclo di vita della funzione/blocco
+            - Indirizzo relativo all'inizio dello stack
+            - Valore iniziale casuale
         - Valori di ritorno
         - Parametri
     - Variabili globali
-        - Indirizzo fisso determinato dal compilatore e linker
+        - Indirizzo fisso e assoluto determinato dal compilatore e linker
+            - Perche' devono essere sempre accessibili
         - Inizializzate o non
-    - Heap
-        - `malloc()`
+    - Heap (variabili dinamiche)
+        - `malloc()` e `free()`, ciclo di vita indipendente
+        - Variabili dinamiche accessibili soo tramite puntatori
+        - Inizializzate o no
+- Lo starting point nello spazio virtuale e' random, cosi' da rendere la vita difficile ai virus
+- [Page file](https://www.howtogeek.com/126430/htg-explains-what-is-the-windows-page-file-and-should-you-disable-it/)
+    - When your RAM becomes full, Windows moves some of the data from your RAM back to your hard drive, placing it in the page file
+    - This file is a form of virtual memory.
 
 ### Allocazione statica e dinamica
+- Linux
+    - `void* malloc(size_t s)`
+    - `void* malloc(int n, size_t s)`, per `n` volte
+    - `void* realloc(void* p, size_t s)`, estende/riduce `p` con la nuova dimensione `s`
+- Windows
+    - *Global heap* e *local heap*
+- C++
+    - Costruttore `new`/`delete`, che inizializza sempre
+    - `new[]`/`delete[]` per array
+    - Rilasciare con la funzione sbagliata puo' corrompere le strutture dati degli allocatori, con conseguenze imprevedibili
 
 ### Puntatori e il loro utilizzo
+- Appartenente ad altri oggetti
+    ```c
+    int a = 10;
+    int* pA = &a;
+    ```
+- Allocato allo scopo
+    ```c
+    int* pB = new int(24);
+    ```
+- Valori invalidi
+    - `0`
+    - Macro `NULL`, ovvero `((void*)0)
+    - C++11 keyword `nullptr`
+- Aritmetica dei puntatori
+    ```c
+    char* ptr = "String";
+    for (int i = 0; *(ptr + 1) != 0; ++i) { /* ... */ }
+    ```
+- Rischi
+    - *Dangling pointer*: puntatore che fa riferimento ad un area di memoria non piu' valida
+    - *Memory leakage*
+    - *Wild pointer*: puntatore non inizializzato
 
 ### Allocazione in Linux
+- `malloc()` effettua una syscall dell'O.S., i cui dettagli dipendono dall'implementazione
+    - `malloc()` per dati > 128KB chiama la `mmap()` che crea un blocco separato in un segmento inutilizzato
+- Ogni PCB (*Process Control Block*) contiene una `mm_struct`(*memory descriptor*), che contiene
+    - `start_brk`/`brk`: inizio/fine heap
+        - `int brk(void* end_data_segment);` sposta il puntatore di fine heap
+        - `void* sbrk(intptr_t increment);` puo' incrementare lo heap
+    - `start_stack`
 
 ### Allocazione in Windows
+- `malloc()` usa il *global heap*
+- *Local heaps*
+    - `HANDLE HeapCreate()`
+    - `void* HeapAlloc(HANDLE heap, DWORD options, SIZE_T s )`
+    - `BOOL HeapFree(Handle heap, DWORD options, void* ptr)`
+    - `BOOL HeapDestroy(HANDLE heap)`
+        - Le aree di memoria diventano inaccessibili
 
 # 4. Introduzione al C++
 
