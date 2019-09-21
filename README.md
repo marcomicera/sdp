@@ -244,6 +244,26 @@ La MMU ha, per ogni pagina, un bit di:
 
 # 5. Gestione delle eccezioni
 
+- `#include<std::exception>`
+    - `what()` contiene il messaggio
+    - `#include<stdexcept>`
+        - `std::logic_error`
+            - `domain_error`, `invalid_argument`, `length_error`, `out_of_range`, etc.
+        - `std:runtime_error`
+            - `overflow_error`, `range_error`, `underflow_error`, etc.
+            - `#include<system_error>`, solo in C++11
+                - `system_error` contiene `code()` che restituisce l'equivalente di `errno`
+    - `#include<new>` per mancanza di memoria
+    - `#include<ios>` I/O errors
+    - `#include<future>` esecuzione asincrona, C++11
+    - `#include<typeinfo>` cast dinamici o RTTI (*RunTime Type Identification*)
+- `catch( ... )` cattura tutte le eccezioni
+- `finally` non esiste
+    - Lo stack viene contratto al lancio di un'eccezione
+    - Tutti i distruttori interessati vengono chiamati
+        - Paradigma **RAII**: *Resource Acquisistion Is Initialization*, cioe' chiudere la risorsa nel distruttore
+        - I distruttori non dovrebbero lanciare eccezioni
+
 # 6. Composizione di oggetti
 
 # 7. Ereditarietà e polimorfismo
