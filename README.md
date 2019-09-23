@@ -291,7 +291,9 @@ CBuffer& operator=(const CBuffer& source) {
         // Distruzione dell'oggetto corrente per evitare un memory leakage
         delete[] this->ptr;
         this->ptr = NULL; // evita dangling pointer se `new char[size]` fallisce successivamente.
-                          // `delete NULL;` e' lecito
+                          // `delete NULL;` e' lecito.
+                          // In caso in cui `new char[size]` fallisca, il compiler rilascerebbe
+                          // un'altra volta la memoria se `this->prt != NULL`.
 
         // Copia di tutti i fields, come nel costruttore di copia
         this->size = source.size;
@@ -321,21 +323,26 @@ Altrimenti il compilatore fornira' la propria implementazione.
         ```cpp
         function(std:string("ciao"));
         ```
-    - Tutto cio' che non ha un nome e puo' comparire solo alla destra di `=` (*RVALUE*)
-- **Costruttore di movimento**
-    ```cpp
-    class CBuffer {
-        int size;
-        char* ptr;
-    public:
-        // Il compilatore decide quando usarlo, preferendolo a quello di copia
-        CBuffer(CBuffer&& source) { // '&&' = RValue reference
-            this->size = source.size;
-            this->ptr = source.ptr; // vantaggio
-            source.ptr = NULL; // l'originale viene modificato!
-        }
-    };
-    ```
+    - **RVALUE**s (tutto cio' che non ha un nome e puo' comparire solo alla destra di `=`)
+        - `int&&` e' un RVALUE
+- **Il compiler sceglie** se usare il costruttore/assegnazione di movimento o di copia
+    - Usa quello di movimento **se subito dopo viene chiamato il distruttore**
+- I thread e `std::unique_ptr` non sono copiabili, ma solo movibili
+
+##### Costruttore di movimento
+```cpp
+class CBuffer {
+    int size;
+    char* ptr;
+public:
+    // Il compilatore decide quando usarlo, preferendolo a quello di copia
+    CBuffer(CBuffer&& source) { // '&&' = RValue reference
+        this->size = source.size;
+        this->ptr = source.ptr; // vantaggio
+        source.ptr = NULL; // l'originale viene modificato!
+    }
+};
+```
 - Compiler's pseudocode:
     ```cpp
     Obj_MoveConstructor(dst, src);
@@ -351,6 +358,75 @@ Altrimenti il compilatore fornira' la propria implementazione.
         return c; // c viene mosso nel risultato
     }
     ```
+
+##### Assegnazione per movimento
+```cpp
+class CBuffer {
+    int size;
+    char* ptr;
+public:
+    CBuffer& operator=(CBuffer&& source) {
+        if (this != &source) {
+            delete[] this->ptr; // svuotamento dell'oggetto destinazione
+            this->size = source.size;
+            this->ptr = source.ptr;
+            // source.size = 0; // inutile, `source` verra' distrutto 
+            source.ptr = NULL; // la sua successiva distruzione non fara' danno
+        }
+        return *this;
+    }
+};
+```
+
+### Paradigma *Copy&Swap*
+Per evitare errori dovuti alla dimenticanza di `this->prt = NULL;`
+```cpp
+class intArray {
+
+    std::size_t mSize;
+    int* mArray;
+
+public:
+
+    // Costruttore
+    intArray(std::size_t size = 0): mSize(size), mArray(mSize ? new int[mSize] : NULL) {}
+
+    // Costruttore di copia
+    intArray(const intArray& that): mSize(that.mSize), mArray(mSize ? new int[mSize] : NULL) {
+        std::copy(that.mArray, that.mArray + mSize, mArray);
+    }
+
+    // Distruttore
+    ~intArray() { delete[] mArray; }
+
+    // Funzione esterna ad una classe, ma che puo' accedere ai suoi `private` fields 
+    friend void swap(intArray& a, intArray& b) {
+        std::swap(a.mSize, b.mSize);
+        std::swap(a.mArray, b.mArray);
+    }
+
+    // Operatore di assegnazione secondo il paradigma Copy&Swap
+    intArray& operator=(intArray that) { // per valore, copiato o mosso a seconda
+                                         // del contesto
+        swap(*this, that); // usa la versione custom di questa classe
+        return *this;
+    }
+
+    // Costruttore di movimento secondo il paradigma Copy&Swap
+    intArray(intArray&& that): mSize(0), mArray(NULL) {
+        swap(*this, that);
+    }
+}
+```
+All'eseguire di `a = b`, `operator=()` effettua una copia di `b` nel parametro `that` perche' secondo la definizione di `operator=()`, `b` viene passato per valore:
+```cpp
+intArray& intArray::operator=(intArray);
+```
+Questa **copia** di `b` sta per essere distrutta, perche' esiste solamente dentro `operator=()`.\
+Se la copia di `b` fallisce, `*this` non viene modificato (l’eccezione si verifica nel tentativo di creare la copia, prima di effettuare uno `swap()`).
+Dopo lo `swap()`, nella copia di `b` (`that`) ci sara' `this`... <!-- TODO -->\
+Questo permette di omettere il test di identita' `if (this != &that)`.\
+Notare che occorre per forza definire il costruttore di movimento, altrimenti l'operatore di assegnazione non puo' usarlo e quindi trarre vantaggio del movimento.
 
 # 7. Ereditarietà e polimorfismo
 
