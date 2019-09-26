@@ -440,6 +440,19 @@ intArray& operator=(const intArray& that) {
 
 > At this point we are home-free, because `swap` is non-throwing. We swap our current data (`this`) with the copied data (`that`), safely altering our state, and the old data gets put into the temporary. The old data is then released when the function returns. (Where upon the parameter's scope ends and its destructor is called.)
 
+### `std::move()`
+- Forza il passaggio per movimento
+    - Fa uno static cast ad un RVALUE
+- Esempio
+    ```cpp
+    std::string str("hello");
+    std::vector<std::string> v;
+    v.push_back(str);   // `str` e' copiato
+                        // v = ["hello"], str = "hello"
+    v.push_back(std::move(str));    // `str` e' spostato
+                                    // v = ["hello", "hello"], str = ""
+    ```
+
 # 7. Ereditarietà e polimorfismo
 
 # 8. Funzioni e operatori
