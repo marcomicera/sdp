@@ -419,7 +419,7 @@ public:
     intArray(intArray&& that): mSize(0), mArray(NULL) {
         swap(*this, that);
     }
-}
+};
 ```
 #### [Why does it work?](https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
 > We first notice an important choice: the parameter argument is taken by-value.\
@@ -454,6 +454,137 @@ intArray& operator=(const intArray& that) {
     ```
 
 # 7. Ereditarietà e polimorfismo
+
+### Simple example
+```cpp
+class File {
+    int fileDescriptor;
+public:
+    uint_8 read();
+    size_t readBlock(uint_8 *ptr, size_t offset, size_t count);
+    int close();
+}
+
+class TextFile : public File {
+    CharCodec codec;
+public:
+    wchar_t readChar();
+    size_t readCharBlock(wchar_t *ptr, size_t offset, size_t count);
+};
+```
+`TextFile` puo' chiamare `File::read()`.
+
+#### Ereditarieta' multipla
+- E' possibile
+- Per questo non esiste la `super` keyword
+    - La sub-class deve utilizzare lo scope-operator
+        ```cpp
+        class TextFile : public File {
+            // ...
+        public:
+            TextFile(): File() { File::read(); }
+        }
+        ```
+
+### Polimorfismo
+- Example
+    ```cpp
+    File* f = new TextFile(); // ok
+    TextFile* tf = new File(); // error
+    ```
+- Difference with Java:
+    |   | Java | C++ |
+    |---|---|---|
+    | Polymorfic | - | `virtual` |
+    | Non-overridable | `final` | - |
+    - I metodi poliformici introducono un overhead
+- Overridden methods:
+    ```cpp
+    class File {
+    public:
+        int m() { return 1; }
+        virtual int mv() { return 1; } // solo le `virtual` sono polimorfiche
+        virtual int ma() = 0; // classe non implementabile (polimorfico puro)
+    }
+
+    class TextFile : public File {
+    public:
+        int m() { return 2; }
+        int mv() { return 2; }
+    }
+
+    int main(int argc, char** argv) {
+        File* prt = new TextFile(); // se File::ma() non esistesse
+        std::cout << ptr->m(); // 1 (2 in Java)
+        std::cout << ptr->mv(); // 2
+        // ...
+    }
+    ```
+- Distruttori virtuali
+    - Se una classe ha una funzione `virtual`, dovrebbe avere anche il distruttore `virtual`, altrimenti potrebbe essere chiamato un distruttore sbagliato
+- Per far si' che il compiler distingua quali implementazioni usare quando viene utilizzato un puntatore alla super-classe, le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta ad una **V-Table** che ha tante entry quanti sono i metodi `virtual` nella classe stessa
+    - Le entry nella V-Table contengono gli indirizzi delle implementazioni concrete dei metodi polimorfici
+    - La V-Table e' statica, costruita a compile-time, condivisa da tutte le istanze concrete della stessa classe
+    - Ereditarieta'
+        - Ereditarieta' semplice: una V-Table, prima le entry della super-class, poi quelle della classe stessa
+        - Erediterieta' multipla: tante V-Table quante sono le super-classi piu' una per la classe stessa
+
+### Type casting
+
+##### Example for this chapter
+```cpp
+class Base1;
+class Base2;
+class Derivata : public Base1, public Base2 {};
+//...
+Derivata* d = new Derivata();
+Base1* b1;
+Base2* b2;
+```
+
+#### `static_cast<T>`
+- Esempio
+    ```cpp
+    b1 = static_cast<Base1*>(d);
+    b2 = static_cast<Base2*>(d);
+    ```
+- Il compiler deve avere delle regole di conversione tra i tipi.
+    - Importatore:
+        ```cpp
+        /* not explicit */ Base1(Derivata d) { /* ... */ }
+        ```
+        - `explicit` avverte il compiler di non utilizzare la funzione per effettuare `static_cast<T>`
+    - Esportatore:
+        ```cpp
+        Base1 Derivata::operator_cast() { /* ... */} // FIXME
+        ```
+- Viene cambiata il puntatore alla V-Table
+    - Durante un downcast, la dimensione della V-Table diminuisce (il valore del puntatore aumenta)
+- L'upcasting e' sempre garantito, il downcasting no
+
+#### `dynamic_cast<T>`
+- RTTI: Run-Time Type Identification
+    - Ogni oggetto ha un hash per il compatibility check
+- Downcasting sicuro, perche' se non e' possibile ritorna:
+    - `0` su puntatore invalido
+    - Runtime exception su riferimento incompatibile
+- Esempio di downcasting
+    ```cpp
+    Base1* b1 = new Base1();
+    Derivata* d = dynamic_cast<Derivata*>(b1); // d = NULL
+    ```
+    - `static_cast<Derivata*>(b1)` avrebbe eseguito, creando problemi
+
+#### `reinterpret_cast<T>`
+- Il cast del C
+- Interpreta la sequenza di bit come un altro tipo
+    - Nessun check
+- Adatto al low level programming
+    - Chiamate dall'O.S.
+    - Byte ricevuti da altro hardware
+
+#### `const_cast<T>`
+- Rimuove il descrittore `const` da una variabile
 
 # 8. Funzioni e operatori
 
