@@ -293,7 +293,8 @@ CBuffer& operator=(const CBuffer& source) {
         this->ptr = NULL; // evita dangling pointer se `new char[size]` fallisce successivamente.
                           // `delete NULL;` e' lecito.
                           // In caso in cui `new char[size]` fallisca, il compiler rilascerebbe
-                          // un'altra volta la memoria se `this->prt != NULL`.
+                          // un'altra volta la memoria se `this->prt != NULL`
+                          // (perche' fa roll-back, non si e' in un blocco try...).
 
         // Copia di tutti i fields, come nel costruttore di copia
         this->size = source.size;
@@ -358,6 +359,8 @@ public:
         return c; // c viene mosso nel risultato
     }
     ```
+- Il costruttore di copia non porta a nessun vantaggio se la classe contiene tutti tipi primitivi
+    - Per i tipi primitivi, il costo della copia e' uguale al costo del movimento
 
 ##### Assegnazione per movimento
 ```cpp
@@ -418,15 +421,24 @@ public:
     }
 }
 ```
-All'eseguire di `a = b`, `operator=()` effettua una copia di `b` nel parametro `that` perche' secondo la definizione di `operator=()`, `b` viene passato per valore:
+#### [Why does it work?](https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
+> We first notice an important choice: the parameter argument is taken by-value.\
+> While one could just as easily do the following (and indeed, many naive implementations of the idiom do):
 ```cpp
-intArray& intArray::operator=(intArray);
+intArray& operator=(const intArray& that) {
+    dumb_array temp(that); // inefficient!
+    swap(*this, temp);
+
+    return *this;
+}
 ```
-Questa **copia** di `b` sta per essere distrutta, perche' esiste solamente dentro `operator=()`.\
-Se la copia di `b` fallisce, `*this` non viene modificato (l’eccezione si verifica nel tentativo di creare la copia, prima di effettuare uno `swap()`).
-Dopo lo `swap()`, nella copia di `b` (`that`) ci sara' `this`... <!-- TODO -->\
-Questo permette di omettere il test di identita' `if (this != &that)`.\
-Notare che occorre per forza definire il costruttore di movimento, altrimenti l'operatore di assegnazione non puo' usarlo e quindi trarre vantaggio del movimento.
+1. Passing by value [is faster](https://web.archive.org/web/20140113221447/http://cpp-next.com/archive/2009/08/want-speed-pass-by-value/)
+2. > If you're going to make a copy of something in a function, let the compiler do it in the parameter list
+> Either way, this method of obtaining our resource is the key to eliminating code duplication: we get to use the code from the copy-constructor to make the copy, and never need to repeat any bit of it.
+
+> Observe that upon entering the function that all the new data is already allocated, copied, and ready to be used. This is what gives us a strong exception guarantee for free: we won't even enter the function if construction of the copy fails, and it's therefore not possible to alter the state of `*this`.
+
+> At this point we are home-free, because `swap` is non-throwing. We swap our current data (`this`) with the copied data (`that`), safely altering our state, and the old data gets put into the temporary. The old data is then released when the function returns. (Where upon the parameter's scope ends and its destructor is called.)
 
 # 7. Ereditarietà e polimorfismo
 
