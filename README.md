@@ -493,10 +493,12 @@ public:
     TextFile* tf = new File(); // error
     ```
 - Difference with Java:
+
     |   | Java | C++ |
     |---|---|---|
     | Polymorfic | - | `virtual` |
     | Non-overridable | `final` | - |
+    
     - I metodi poliformici introducono un overhead
 - Overridden methods:
     ```cpp
@@ -587,5 +589,107 @@ Base2* b2;
 - Rimuove il descrittore `const` da una variabile
 
 # 8. Funzioni e operatori
+
+### Puntatori a funzione
+- Syntax
+    ```cpp
+    <return_value> (*var) (<arguments>)
+    ```
+- Example
+    ```cpp
+    int f(int i, double d) { /* ... */ }
+    int (*var)(int, double);
+    var = f;
+    var = &f; // it's the same, more coherent
+    var(10, 3.14); // calls f()
+    ```
+    - Default arguments
+        ```cpp
+        int g(int, int = 4);
+        int (*p)(int) = &g; // ERROR: missing 2nd default argument
+        ```
+
+### Oggetti funzionali o *funtori*
+- Example
+    ```cpp
+    class FC {
+    public:
+        int operator()(int v) {
+            return v*2;
+        }
+    };
+
+    FC fc;
+    int i = fc(5);  // object behaving like a function
+                    // i = 10
+    ```
+- Usage
+    - Non-deterministic functions (they have access to `this`)
+    - Example
+        ```cpp
+        class Accumulator {
+            int tot;
+        public:
+            Accumulator():tot(0) {}
+            int operator()(int v) {
+                tot += v;
+                return v;
+            }
+            int tot() { return tot; }
+        };
+
+        void main () {
+            Accumulator a;
+            for (int i = 0; i < 10; i++)
+                a(i);
+            std::cout << "Total: " << a.tot() << std::endl; // 45
+        }
+        ```
+- Oggetti funzionali e puntatori a funzione
+    ```cpp
+    template <typename F>
+    void some_function(F& f) {
+        f(); // puntatore a funzione o oggetto funzionale
+    }
+    ```
+
+### Lambda functions
+- Syntax
+    ```cpp
+    [<captured_vars>](<params>) -> <return_type> { <function_body> }
+    ```
+- Usato nella libreria standard: lambda function
+    ```cpp
+    int main() {
+        std::vector<int> v;
+        // ...
+        std::for_each(v.begin(), v.end(), 
+            [](int i) { std::cout << i << " "; }
+        );
+    }
+    ```
+    - Il tipo di ritorno non sempre e' omettibile
+        ```cpp
+        [](int num, int den) -> double {
+            if (den == 0)
+                return std::NaN;
+            else
+                return (double)num/den;
+        }
+        ```
+- Captured vars
+    - Variabili locali il cui valore o riferimento si vuole rendere disponibili nella funzione
+    - Le context variables devono essere dichiarate nell'outer block in cui la lamba function e' definita
+    - `[x, y]` per valore
+    - `[&x, &y]` per riferimento
+    - `[&]` cattura tutto per riferimento
+- Usage
+    - Algoritmi generici
+    - Programmazione funzionale: programmazione in cui funzioni ritornano altre funzioni
+    - Programmazione concorrente
+
+### Operator overloading
+- Non si possono definire nuovi operatori
+- Non si possono cambiare le precedenze
 
 # 9. Programmazione generica
