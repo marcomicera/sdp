@@ -705,12 +705,18 @@ Base2* b2;
 
 # 9. Programmazione generica
 - In Java, a runtime e' tutto `Object`, ma il down-casting tempo durante l'esecuzione
-- In C++, i templates sono compilati in due fasi:
+    - A runtime e' possibile non rispettare i vincoli
+        ```java
+        MyList<Integer> myList = new MyList<>(); // `MyList<Object>`
+        myList.append("String"); // OK
+        ```
+- In C++, i templates sono **compilati** in due fasi:
     1. Coerenza ai vincoli
     2. Istanziazione dei template: generazione del codice a seconda degli utilizzi
+- I templates quindi **sono completamente risolti in fase di compilazione**
 - Applicabile a funzioni o a classi
 
-#### Generic functions
+### Generic functions
 - Example
     ```cpp
     template <class T>
@@ -725,7 +731,7 @@ Base2* b2;
         max<double>(2, 3.14);
         ```
 
-#### Generic classes (templates)
+### Generic classes (templates)
 - Example
     ```cpp
     template <class T>
@@ -733,15 +739,104 @@ Base2* b2;
         T total;
     public:
         Accum(T start): total(start) {}
-        T operator+(const T& t) {
+        T operator+(const T& t) { // T must override operator+()
             return total = total + t;
         }
         T value() {
             return total; // T must have a copy constructor, ritorno per copia
         }
     };
+
+    Accum<std::string> sa("");
+    Accum<int> ia(0);
     ```
 - Anche con valori fissati
     ```cpp
     template <class T, int size> // valore costante, non una espressione
+    ```
+
+### Specializzare un template
+- Alcuni tipi potrebbero essere non utilizzabili all'interno di un template
+    - Potrebbero non avere l'implementazione di un operatore usato nella definizione del template stesso.\
+    E.g., se nella definizione del template, due oggetti generici si sommano, il tipo dovra' implementare `operator+()`.
+- Alternative:
+    - Cambiare il template: raro, dati dalle librerie
+    - Modificare la classe
+    - Specializzare il template
+        - Example
+            ```cpp
+            class Person { // incapsula una stringa
+                std::string name;
+            public:
+                Person(std::string n): name(n) {}
+                // Does not override operator+().
+                // How could we use the `Accum`(ulator) template
+                // with `Person`(s)?
+            };
+
+            // Template specializzato per la classe `Person`
+            template<> class Accum<Person> {
+                int total;
+            public:
+                Accum(int start = 0): total(start) {}
+                int operator+(const Person&) { return ++total; }
+            };
+            ```
+
+### Drawbacks
+- Vanno verificate le assunzioni sui tipi effettivamente usati
+    - Esempio: templates della standard library assumono che l'oggetto sia:
+        1. Copiabile (costruttore di copia)
+        1. Assegnabile (operatore di assegnazione)
+    - Altrimenti: compile error
+        - Error message non preciso, perche' C++ prova prima ad effettuare conversioni
+
+### Smart Pointer template
+- Overload degli operatori classici: `*` e `->`
+    - `!` per la validita': `while(!ptr)`
+    - Esempio stupido
+        ```cpp
+        class int_ptr {
+            int* ptr;
+            int_ptr(const int_ptr&); // no copy constructor
+            int_ptr& operator=(const int_ptr&); // no assignment
+        public:
+            explicit int_ptr(int* p): ptr(p) {}
+            ~int_ptr() { delete ptr; }  // Assunzione, il `p` sovrastante
+                                        // deve essere allocato sullo heap,
+                                        // altrimenti questo non ha senso.
+            int& operator*() { return *ptr; } // Errore se `p` fosse NULL
+        };
+
+        int i = 1;
+        int_ptr ip(&i); // il distruttore chiamera' `delete` su un elemento
+                        // dello stack => errore
+        ```
+- Vantaggi sui puntatori classici:
+    - Garanzia di inizializzazione (costruttore) e rilascio (distruttore)
+    - Conteggio dei riferimenti
+    - Accesso controllato
+- Generic smart pointer
+    ```cpp
+    template <class T>
+    class smart_ptr {
+        T* ptr;
+        smart_ptr(const smart_ptr<T>&);
+        smart_ptr<t>& operator=(const smart_ptr<T>&);
+    public:
+        explicit smart_ptr(T* p = 0): ptr(p) {}
+        ~smart_ptr() { delete ptr; }
+        T& operator*() { return *ptr; }
+        T* operator->() { return ptr; }
+    };
+
+    void example() {
+        smart_ptr<MyClass> p(new MyClass());    // RAII: il ciclo di vita della
+                                                // risorsa (il pointer) coincide
+                                                // con quello dell'oggetto che
+                                                // lo racchiude.
+        p->execute();   // destructor deletes pointer in case of exception
+                        // (stack unwinding)
+        // no `delete` on pointer
+    }
     ```
