@@ -5,6 +5,17 @@ Course held by Prof. Malnati
 - [OneNote notes](https://1drv.ms/u/s!AkzjmTTkND1lhPVBx3kR1-NqPIPxTw)
 - [O.S. books](http://www.os-book.com/)
 
+# Table of contents
+1. [Piattaforme di esecuzione](#1-piattaforme-di-esecuzione)
+2. [Il modello di esecuzione](#2-il-modello-di-esecuzione)
+3. [Allocazione della memoria](#3-allocazione-della-memoria)
+4. [Introduzione al C++](#4-introduzione-al-c)
+5. [Gestione delle eccezioni](#5-gestione-delle-eccezioni)
+6. [Composizione di oggetti](#6-composizione-di-oggetti)
+7. [Ereditarietà e polimorfismo](#7-ereditarietà-e-polimorfismo)
+8. [Funzioni e operatori](#8-funzioni-e-operatori)
+9. [Programmazione generica](#9-programmazione-generica)
+
 # 1. Piattaforme di esecuzione
 
 ### Interfacciarsi con il sistema operativo
@@ -714,7 +725,7 @@ Base2* b2;
         max<double>(2, 3.14);
         ```
 
-#### Generic classes
+#### Generic classes (templates)
 - Example
     ```cpp
     template <class T>
@@ -732,5 +743,5 @@ Base2* b2;
     ```
 - Anche con valori fissati
     ```cpp
-    template <class T, int size> // valore costante
+    template <class T, int size> // valore costante, non una espressione
     ```
