@@ -693,3 +693,44 @@ Base2* b2;
 - Non si possono cambiare le precedenze
 
 # 9. Programmazione generica
+- In Java, a runtime e' tutto `Object`, ma il down-casting tempo durante l'esecuzione
+- In C++, i templates sono compilati in due fasi:
+    1. Coerenza ai vincoli
+    2. Istanziazione dei template: generazione del codice a seconda degli utilizzi
+- Applicabile a funzioni o a classi
+
+#### Generic functions
+- Example
+    ```cpp
+    template <class T>
+    const T& max(const T& t1, const T& t2) {
+        return (t1 < t2 ? t2 : t1);
+    }
+    ```
+    - `T` deve avere `operator+()`
+    - `T` deve aver un costruttore di copia, per derivare una variabile temporanea a partire da un dato costante
+    - Forzare la scelta
+        ```cpp
+        max<double>(2, 3.14);
+        ```
+
+#### Generic classes
+- Example
+    ```cpp
+    template <class T>
+    class Accum {
+        T total;
+    public:
+        Accum(T start): total(start) {}
+        T operator+(const T& t) {
+            return total = total + t;
+        }
+        T value() {
+            return total; // T must have a copy constructor, ritorno per copia
+        }
+    };
+    ```
+- Anche con valori fissati
+    ```cpp
+    template <class T, int size> // valore costante
+    ```
