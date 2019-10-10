@@ -43,7 +43,7 @@ Course held by Prof. Malnati
         * [Costruttore di movimento](#costruttore-di-movimento)
         * [Assegnazione per movimento](#assegnazione-per-movimento)
     + [Paradigma *Copy&Swap*](#paradigma--copy-swap-)
-      - [[Why does it work?](https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)](#-why-does-it-work---https---stackoverflowcom-questions-3279543-what-is-the-copy-and-swap-idiom-)
+      - [Why does it work?](#-why-does-it-work)
     + [`std::move()`](#-std--move---)
 7. [Ereditarietà e polimorfismo](#7-ereditariet--e-polimorfismo)
     + [Simple example](#simple-example)
