@@ -21,7 +21,7 @@ Course held by Prof. Malnati
 2. [Il modello di esecuzione](#2-il-modello-di-esecuzione)
       - [Innalzamento di privilegio](#innalzamento-di-privilegio)
       - [Creazione di un processo](#creazione-di-un-processo)
-        * [GCC/Linux start function](#gcc-linux-start-function)
+        * [GCC/Linux start function](#gcclinux-start-function)
         * [Windows start function](#windows-start-function)
       - [Compiling with `-nostdlib`](#compiling-with--nostdlib)
 3. [Allocazione della memoria](#3-allocazione-della-memoria)
@@ -886,8 +886,87 @@ Base2* b2;
                                                 // risorsa (il pointer) coincide
                                                 // con quello dell'oggetto che
                                                 // lo racchiude.
+        
         p->execute();   // destructor deletes pointer in case of exception
                         // (stack unwinding)
+
         // no `delete` on pointer
     }
     ```
+
+#### Different strategies
+- Passaggio di proprieta'
+- Creazione di una copia
+- Condivisione con conteggio dei riferimenti
+    - Garbage collector, with all its drawbacks (no cycles, overhead, etc.)
+- Condivisione in lettura (`const`) e duplicazione in scrittura
+
+#### C++ Smart Pointers
+```cpp
+#include <memory>
+```
+- `std::shared_ptr<BaseType>`
+    - Conteggio dei riferimenti
+    - Copiabile e assegnabile
+    - Inizializzabile 
+        - `make_shared<BaseType>(params...)`
+        - Copia o assegnazione
+    - `NullPointerException` se inizializzato con `NULL`
+    - Due campi: 64 bit, accesso due volte
+        - Proprieta' condivisa `objectPtr`
+        - Blocco di controllo `counterPtr`
+            - `counter`, contatore dei riferimenti
+            - `weakCnt`
+            - `objectPtr`, per distruttore
+    - E' possibile specificare un distruttore (altrimenti usa `delete`)
+    - `get()` restituisce una copia del puntatore nativo
+        - Per backward-compatibility
+    - `reset()` decrementa il contatore ed elimina il riferimento
+- `std::weak_ptr<BaseType>`
+    - Senza conteggio di riferimenti = cicli
+    - Si crea a partire da uno `shared_ptr`
+    - Si accede al dato promuovendolo temporaneamente ad uno `shared_ptr` tramite `lock()`
+        - Controllare la validita' con `expired()`
+    - Puntano solo al blocco di controllo
+        - Non partecipano al conteggio dei riferimenti
+    - Esempio
+        ```cpp
+        std::weak_ptr<int> gw;
+        
+        void f() {
+            if (auto spt = gw.lock())
+                std::cout << "gw: " << *spt << "\n";
+            else
+                std::cout << "gw e' scaduto\n";
+        }
+        
+        int main() {
+            {
+                auto sp = std::make_shared<int>(42);
+                gw = sp;
+                f(); // OK
+            
+            } // sp viene distrutto, gw scade
+
+            f(); // scaduto
+        }
+        ```
+- `std::unique_ptr<BaseType>`
+    - Non copiabile, ne' assegnabile
+    - Movibile per
+        - Costruzione
+        - Operatori di movimento
+            - Trasferito ad un altro `unique_ptr`
+            - Esplicitamente con `std::move()`
+    - Usi
+        - Garantire la distruzione di un oggetto
+        - Gestione sicura di oggetti polimorfici
+        - `std::make_unique<BaseType>()`
+
+# 10. Librerie C++
+- `stdio.h` (`printf()`, `scanf()`, etc.) gestiscono solo i tipi elementari
+- `ios` e' la classe base (virtuale) di tutti gli stream
+    - Stato dello stream
+    - Manipolazione del formato
+- `std::cout`, `std::cin`, ..., sono variabili
+    - `if (!cout)` controlla se sia in uno stato di badness
