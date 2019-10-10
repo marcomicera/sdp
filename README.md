@@ -66,6 +66,12 @@ Course held by Prof. Malnati
     + [Specializzare un template](#specializzare-un-template)
     + [Drawbacks](#drawbacks)
     + [Smart Pointer template](#smart-pointer-template)
+      - [Different strategies](#different-strategies)
+      - [C++ Smart Pointers](#c-smart-pointers)
+10. [Librerie C++](#10-librerie-c)
+      - [I/O](#i-o)
+      - [Standard Template Library](#standard-template-library)
+    + [Il processo di compilazione](#il-processo-di-compilazione)
 
 # 1. Piattaforme di esecuzione
 
@@ -964,9 +970,39 @@ Base2* b2;
         - `std::make_unique<BaseType>()`
 
 # 10. Librerie C++
+
+#### I/O
 - `stdio.h` (`printf()`, `scanf()`, etc.) gestiscono solo i tipi elementari
 - `ios` e' la classe base (virtuale) di tutti gli stream
     - Stato dello stream
     - Manipolazione del formato
-- `std::cout`, `std::cin`, ..., sono variabili
-    - `if (!cout)` controlla se sia in uno stato di badness
+- `std::cout`, `std::cin`, `std::cerr` e `std::clog` sono variabili
+    - `if (!cout)` o `if (!cin.good())` per fare il check di errori, perche' non vengono lanciate eccezioni
+
+#### Standard Template Library
+- `std::set` richiede l'implementazione di `operator<()`
+- Iterators
+    - Gli iteratori sono sottoclassi dei containers (`vector`, `list`, etc.)
+    - Esempio
+        ```cpp
+        class C;
+        list<C> l(10);
+
+        list<C>::iterator iter = l.begin();
+        list<C>::iterator end = l.end();
+
+        for (; iter != end; ++iter) {
+            C elem = *iter;
+            // ...
+        }
+
+        std::for_each(l.being(), l.end(), print);
+        ```
+- Le `map` usano `pair<t1, t2>`
+
+### Il processo di compilazione
+- [The `extern` keyword](https://docs.microsoft.com/en-us/cpp/cpp/extern-cpp?view=vs-2019)
+    > The `extern` keyword is applied to a global variable, function or template declaration to specify that the name of that thing has external linkage
+
+    > `extern "C"` specifies that the function is defined elsewhere and uses the C-language calling convention.\
+    The `extern "C"` modifier may also be applied to multiple function declarations in a block.
