@@ -72,6 +72,7 @@ Course held by Prof. Malnati
       - [I/O](#i-o)
       - [Standard Template Library](#standard-template-library)
     + [Il processo di compilazione](#il-processo-di-compilazione)
+11. [Librerie](#11-librerie)
 
 # 1. Piattaforme di esecuzione
 
@@ -1006,3 +1007,71 @@ Base2* b2;
 
     > `extern "C"` specifies that the function is defined elsewhere and uses the C-language calling convention.\
     The `extern "C"` modifier may also be applied to multiple function declarations in a block.
+
+# 11. Librerie
+- L'uso di una libreria richiede due fasi
+    - Identificazione dei moduli necessasri e loro caricamento in memoria
+    - Aggiornamento degli indirizzi per puntare correttamente ai moduli caricati
+- Librerie gestite da:
+    - Linker (librerie statiche)
+    - Loader (librerie collegate dinamicamente)
+    - Durante l'esecuzione dal programma stesso (librerie caricate dinamicamente)
+- Il loader carica dei `.dll` in modo ricorsivo
+
+
+### Tassonomia delle librerie
+- Librerie statiche (linker)
+    - Archivio, `lib*.a` in Linux e `.lib` in Windows
+        - Concatenazione di file `.o`
+        - L'*archiver* `ar` aggiunge file `.o` ad una libreria statica
+    - Flag `-l` al compiler per specificare librerie
+        - In Linux, `-lpthread` diventa `lib_pthread.a`
+        - Vengono cercate nella current directory e in `LD_LIBRARY_PATH`
+        - `gcc` usa `-lc`, `g++` usa `lcc
+    - Flag `-L` al compiler per specificare directory contenenti librerie
+    - Stessi contenuti in processi differenti
+        - Pagine fisiche replicate
+    - Ogni applicazione che fa uso di una libreria statica dev'essere ricompilata ad ogni modifica della libreria
+- Librerie dinamiche
+    - Collegate dinamicamente (loader)
+        - L'executable contiene info su dove recuperare le librerie
+        - File `.so` in Linux (ELF) e `.dll` in Windows (PE2)
+        - Condivisione di pagine fisiche
+            - Librerie mappate in spazi di indirizzamento lontani dall'executable
+        - Linux dynamic linker: `ld.so`
+            - E' anch'esso una libreria dinamica
+            - Non ha riferimenti a nessun'altra libreria
+            - Viene sempre mappato in memoria
+            - Mappato nello spazio virtale, ma vengono usate sempre le stesse pagine fisiche
+        - In Windows, il dynamic linker fa parte del kernel
+        - Come si caricano in Linux
+            - `dlopen()` mappa un `.o` nello spazio di indirizzamento del programma
+            - `dlsym()` cerca l'indirizzo di un simbolo (variable o funzione) di un file `.o` aperto
+            - `dlerror()` per l'ultimo errore occorso
+            - `dlclose()` unmappa una libreria `.so` dallo spazio di indirizzamento
+            - Esempio
+                ```c
+                #include <stdio.h>
+                #include <dlfcn.h>
+
+                void invoke(char* lib, char* m, float arg) {
+                    void* dl_handle = dlopen(lib, RTLD_LAZY); // lazy loading
+                    if (!dl_handle) return;
+                    float (*func)(float) = dlsym(dl_handle, m); // cerca `cosf()`
+                    if (func==NULL) return;
+                    printf("Result: %f\n", (*func)(arg)); // chiama `cosf()` di 'libm.so'
+                    dlclose(dl_handle);
+                }
+
+                int main(int argc, char *argv[]){
+                    invoke("libm.so", "cosf", 3.14156f);
+                }
+                ```
+        - Come si caricano in Windows 
+            - I `.dll` possono contenere anche risorse (pointers)
+            - I `.dll` possono avere una funzione di ingresso `DllMain`
+                - Il loader la invoca prima di ritornare il controllo al programma
+                - La `.dll` puo' fare una inizializzazione globale
+            - `LoadLibrary()` mappa un `.dll` nello spazio di indirizzamento del programma
+                - `HANDLE` per l'indirizzo della `.dll` o errore
+    - Caricate dinamicamente (dal programma stesso)
