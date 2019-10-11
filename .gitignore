@@ -1,3 +1,6 @@
+# Chrome temporary download files
+*.crdownload
+
 # LibreOffice lock files
 .~lock*
 
