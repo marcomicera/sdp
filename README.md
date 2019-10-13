@@ -77,6 +77,9 @@ Course held by Prof. Malnati
         - [Librerie statiche](#librerie-statiche)
         - [Librerie dinamiche](#librerie-dinamiche)
 12. [Programmazione concorrente](#12-programmazione-concorrente)
+    + [Thread e memoria](#thread-e-memoria)
+    + [Sincronizzazione in Windows](#sincronizzazione-in-windows)
+    + [Sincronizzazione in Linux](#sincronizzazione-in-linux)
 
 # 1. Piattaforme di esecuzione
 
@@ -1159,3 +1162,32 @@ Base2* b2;
 - `FreeLibrary()` per il rilascio
 
 # 12. Programmazione concorrente
+
+### Thread e memoria
+- I thread condividono:
+    - Spazio di indirizzamento (variabili globali)
+    - Codice
+    - Costanti
+    - Heap
+- Ogni thread ha:
+    - Stack delle chiamate (variabili locali)
+    - Puntatore all'ultimo contesto per la gestione delle eccezioni
+        - Registro `EP`
+        - Ad ogni blocco `try` viene salvato un puntatore al suo blocco `catch`
+    - Lo stato del proprio processore virtuale
+        - Instruction pointer `IP`, etc...
+        - Per preemption
+        - E' nel kernel
+
+### Sincronizzazione in Windows
+- Oggetti user
+    - `CriticalSection`, che usa `test-and-set`
+    - `ConditionVariable`
+- Oggetti kernel
+    - `Mutex`, `Event`, `Semaphore`, `Pipe`, `Mailslot`, etc.
+
+### Sincronizzazione in Linux
+- Oggetti `PThreads`
+    - `phread_mutex`, `pthread_cond`, etc.
+- Oggetti kernel
+    - Semaphor, pipe, signal, futex
