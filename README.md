@@ -73,6 +73,10 @@ Course held by Prof. Malnati
       - [Standard Template Library](#standard-template-library)
     + [Il processo di compilazione](#il-processo-di-compilazione)
 11. [Librerie](#11-librerie)
+    + [Tassonomia delle librerie](#tassonomia-delle-librerie)
+        - [Librerie statiche](#librerie-statiche)
+        - [Librerie dinamiche](#librerie-dinamiche)
+12. [Programmazione concorrente](#12-programmazione-concorrente)
 
 # 1. Piattaforme di esecuzione
 
@@ -1021,57 +1025,137 @@ Base2* b2;
 
 ### Tassonomia delle librerie
 - Librerie statiche (linker)
-    - Archivio, `lib*.a` in Linux e `.lib` in Windows
-        - Concatenazione di file `.o`
-        - L'*archiver* `ar` aggiunge file `.o` ad una libreria statica
-    - Flag `-l` al compiler per specificare librerie
-        - In Linux, `-lpthread` diventa `lib_pthread.a`
-        - Vengono cercate nella current directory e in `LD_LIBRARY_PATH`
-        - `gcc` usa `-lc`, `g++` usa `lcc
-    - Flag `-L` al compiler per specificare directory contenenti librerie
-    - Stessi contenuti in processi differenti
-        - Pagine fisiche replicate
-    - Ogni applicazione che fa uso di una libreria statica dev'essere ricompilata ad ogni modifica della libreria
 - Librerie dinamiche
     - Collegate dinamicamente (loader)
-        - L'executable contiene info su dove recuperare le librerie
-        - File `.so` in Linux (ELF) e `.dll` in Windows (PE2)
-        - Condivisione di pagine fisiche
-            - Librerie mappate in spazi di indirizzamento lontani dall'executable
-        - Linux dynamic linker: `ld.so`
-            - E' anch'esso una libreria dinamica
-            - Non ha riferimenti a nessun'altra libreria
-            - Viene sempre mappato in memoria
-            - Mappato nello spazio virtale, ma vengono usate sempre le stesse pagine fisiche
-        - In Windows, il dynamic linker fa parte del kernel
-        - Come si caricano in Linux
-            - `dlopen()` mappa un `.o` nello spazio di indirizzamento del programma
-            - `dlsym()` cerca l'indirizzo di un simbolo (variable o funzione) di un file `.o` aperto
-            - `dlerror()` per l'ultimo errore occorso
-            - `dlclose()` unmappa una libreria `.so` dallo spazio di indirizzamento
-            - Esempio
-                ```c
-                #include <stdio.h>
-                #include <dlfcn.h>
-
-                void invoke(char* lib, char* m, float arg) {
-                    void* dl_handle = dlopen(lib, RTLD_LAZY); // lazy loading
-                    if (!dl_handle) return;
-                    float (*func)(float) = dlsym(dl_handle, m); // cerca `cosf()`
-                    if (func==NULL) return;
-                    printf("Result: %f\n", (*func)(arg)); // chiama `cosf()` di 'libm.so'
-                    dlclose(dl_handle);
-                }
-
-                int main(int argc, char *argv[]){
-                    invoke("libm.so", "cosf", 3.14156f);
-                }
-                ```
-        - Come si caricano in Windows 
-            - I `.dll` possono contenere anche risorse (pointers)
-            - I `.dll` possono avere una funzione di ingresso `DllMain`
-                - Il loader la invoca prima di ritornare il controllo al programma
-                - La `.dll` puo' fare una inizializzazione globale
-            - `LoadLibrary()` mappa un `.dll` nello spazio di indirizzamento del programma
-                - `HANDLE` per l'indirizzo della `.dll` o errore
     - Caricate dinamicamente (dal programma stesso)
+
+#### Librerie statiche
+- Archivio, `lib*.a` in Linux e `.lib` in Windows
+    - Concatenazione di file `.o`
+    - L'*archiver* `ar` aggiunge file `.o` ad una libreria statica
+- Flag `-l` al compiler per specificare librerie
+    - In Linux, `-lpthread` diventa `lib_pthread.a`
+    - Vengono cercate nella current directory e in `LD_LIBRARY_PATH`
+    - `gcc` usa `-lc`, `g++` usa `lcc
+- Flag `-L` al compiler per specificare directory contenenti librerie
+- Stessi contenuti in processi differenti
+    - Pagine fisiche replicate
+- Ogni applicazione che fa uso di una libreria statica dev'essere ricompilata ad ogni modifica della libreria
+
+#### Librerie dinamiche
+- L'executable contiene info su dove recuperare le librerie
+- File `.so` in Linux (ELF) e `.dll` in Windows (PE2)
+- Condivisione di pagine fisiche
+    - Librerie mappate in spazi di indirizzamento lontani dall'executable
+- Linux dynamic linker: `ld.so`
+    - E' anch'esso una libreria dinamica
+    - Non ha riferimenti a nessun'altra libreria
+    - Viene sempre mappato in memoria
+    - Mappato nello spazio virtale, ma vengono usate sempre le stesse pagine fisiche
+- In Windows, il dynamic linker fa parte del kernel
+- Come si caricano in Linux
+    - `dlopen()` mappa un `.o` nello spazio di indirizzamento del programma
+    - `dlsym()` cerca l'indirizzo di un simbolo (variable o funzione) di un file `.o` aperto
+    - `dlerror()` per l'ultimo errore occorso
+    - `dlclose()` unmappa una libreria `.so` dallo spazio di indirizzamento
+    - Esempio
+        ```c
+        #include <stdio.h>
+        #include <dlfcn.h>
+
+        void invoke(char* lib, char* m, float arg) {
+            void* dl_handle = dlopen(lib, RTLD_LAZY); // lazy loading
+            if (!dl_handle) return;
+            float (*func)(float) = dlsym(dl_handle, m); // cerca `cosf()`
+            if (func==NULL) return;
+            printf("Result: %f\n", (*func)(arg)); // chiama `cosf()` di 'libm.so'
+            dlclose(dl_handle);
+        }
+
+        int main(int argc, char *argv[]){
+            invoke("libm.so", "cosf", 3.14156f);
+        }
+        ```
+- Come si caricano in Windows 
+    - I DLL possono contenere anche risorse (pointers)
+    - I DLL possono avere una funzione di ingresso `DllMain`
+        - Il loader la invoca prima di ritornare il controllo al programma
+        - La DLL puo' fare una inizializzazione globale
+        - Parametri: `DllMain(HINSTANCE handle, DWORD r, PVOID unused)`
+            - `HANDLE` della DLL
+            - Flag
+                - `DLL_PROCESS_ATTACH`: DLL mappata in un processo
+                - `DLL_PROCESS_DETACH`: DLL about to be un-mapped
+                - `DLL_THREAD_ATTACH` e `DLL_THREAD_DETACH` per Visual Basic
+    - `LoadLibrary()` mappa un DLL nello spazio di indirizzamento del programma
+        - `HANDLE` per l'indirizzo della DLL (`HMODULE`) o errore con `GetLastError()`
+- Condivisione variabili
+    - Le variabili globali di una stessa DLL non vengono condivise tra processi diversi
+        - ELF e PE hanno segmenti di codice e dati, e questi ultimi non sono condivisi
+    - E' possibile creare zone di memoria condivise tra tutti i processi che utilizzano una certa DLL
+        - Solo per variabili inizializzate
+        - Apposito segmento in DLL
+    - [Esportazione simboli](https://stackoverflow.com/questions/10222566/what-is-dllspecdllimport-and-dllspecdllexport-means)
+        - > `__dllspec(dllexport)` exports a symbol. It makes it available from outside a DLL. 
+        - > `__declspec(dllimport)` imports a symbol. It practically says "this symbol is not defined in this application, it needs to be imported from a DLL file".
+        - In header files `.h` appositi
+        - [Esempio](https://stackoverflow.com/questions/37571359/c-cpp-calling-a-dll-dynamically-with-parameters)
+            ```c
+            // SampleDLL.h
+            #ifdef EXPORTING_DLL    // il pre-compiler vede tutti i simboli di tutti
+                                    // i moduli. Questa define deve avere un nome
+                                    // particolare per evitare dei clash
+            extern __declspec(dllexport) void HelloWorld();
+            #else
+            extern __declspec(dllimport) void HelloWorld();
+            #endif
+            ```
+
+            ```c
+            // SampleDLL.c
+            #define EXPORTING_DLL
+            #include "sampleDLL.h"
+
+            BOOL APIENTRY DllMain(…)
+
+            void HelloWorld() { printf("Hello world"); }
+            ```
+
+            ```c
+            // Static_Dll_usage.c 
+            #include "sampleDLL.h"
+            void someMethod() {
+                HelloWorld();
+            }
+            ```
+
+            ```c
+            // Dynamic_Dll_usage.c
+            typedef VOID (*DLLPROC) (LPTSTR);
+
+            // L"string" per widechar (UNICODE)
+            HINSTANCE hDLL = LoadLibrary(L"sampleDLL.dll");
+
+            if (hDLL != NULL) {
+                DLLPROC Hw = (DLLPROC)GetProcAddress(hDLL, L"HelloWorld");
+                if (Hw != NULL)
+                    (*Hw)(); // "Hello world'
+                FreeLibrary(hDLL);
+            }
+            ```
+    - `extern c` per evitare il name mangling del compiler
+        ```cpp
+        // SampleDLL.def
+        LIBRARY "sampleDLL"
+
+        EXPORTS
+            HelloWorld
+        ```
+    - Vecchia soluzione: file module definition `.def` con la lista di simboli da importare ed esportare
+- Compilazione DLL: i file `.lib`
+    - Visual Studio genera, oltre al `.dll`, un file `.lib`.
+    - Contengono stub methods delle API offerte.
+        - "Se la DLL non e' stata caricata, caricala, altrimenti chiama direttamente la funzione"
+- `FreeLibrary()` per il rilascio
+
+# 12. Programmazione concorrente
