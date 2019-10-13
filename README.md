@@ -1161,7 +1161,7 @@ Base2* b2;
         - "Se la DLL non e' stata caricata, caricala, altrimenti chiama direttamente la funzione"
 - `FreeLibrary()` per il rilascio
 
-# 12. Programmazione concorrente
+# 13. Programmazione concorrente
 
 ### Thread e memoria
 - I thread condividono:
@@ -1191,3 +1191,62 @@ Base2* b2;
     - `phread_mutex`, `pthread_cond`, etc.
 - Oggetti kernel
     - Semaphor, pipe, signal, futex
+
+# 12. Programmazione concorrente in C++
+- C++ standardizza il concetto di thread in `std::thread`
+
+### Esecuzione asincrona
+```cpp
+#include <future>
+```
+- Funzione `std::async()`
+- Parametri:
+    - Il nome di una funzione/lamba expression/oggetto funzionale (*callable*)
+    - Parametri per la funzione
+- Funzione eseguita in un altro thread
+- Restituisce `std::future<T>`
+    - `get()` per il risultato
+        - Rilancia l'eccezione se il thread asincrono ne ha lanciata una
+        - Si blocca in attesa se l'operazione non e' finita
+        - Se l'esecuzione non e' iniziata, ne forza l'avvio
+        - Chiamabile una volta sola, altrimenti eccezione
+    - `wait()`
+        - Consente di non consumare il risultato subito, garantendo al chiamante della `get()` di ottenere qualcosa di significativo
+        - Chiamabile piu' volte
+        - Varianti temporali
+            ```cpp
+            wait_for(std::chrono::duration duration)
+            wait_until(std::chrono::time_point time_point)
+            ```
+            - Restituiscono
+                - `std::future_status::deferred`, funzione non partita
+                - `std::future_status::ready`, risultato pronto
+                - `std::future_status::timeout`, risultato non pronto
+            - Non forzano l'avvio in caso di task *deferred*
+            - Indicando durata nulla, permettono di scoprire se il task sia gia' terminato o no
+    - Il suo distruttore aspetta che il risultato sia scritto
+- Esempio
+    ```cpp
+    #include <future>
+    #include <string>
+    std::string f1(std::string p1, double p2) { /* .. */ }
+    std::string f2(int p)  { /* .. */ }
+
+    int main() {
+        std::future<std::string> future1 = std::async(f1, "string", 3.14);
+        std::string res2 = f2(18); // thread principale
+        std::string res1 = future1.get();
+        std::string result = res1 + res2;
+    }
+    ```
+- `std::launch::async` attiva sempre un thread secondario
+    - `std::async` puo' non creare un thread se ci sono poche risorse
+    - Pericoloso perche' lo stack viene copiato per ogni thread
+- `std::launch::deferred`
+    - Lazy evaulation upon calling `get()` or `wait()`
+    - Usato in caso di tante richieste simultanee
+    - Il sistema prova a creare un secondo thread, altrimenti segna l'attivita' come *deferred*
+
+### Attesa dei risultati
+
+### Forme di sincronizzazione
