@@ -80,6 +80,11 @@ Course held by Prof. Malnati
     + [Thread e memoria](#thread-e-memoria)
     + [Sincronizzazione in Windows](#sincronizzazione-in-windows)
     + [Sincronizzazione in Linux](#sincronizzazione-in-linux)
+13. [Programmazione concorrente in C++](#13-programmazione-concorrente-in-c)
+    + [Esecuzione asincrona](#esecuzione-asincrona)
+    + [`std::mutex`](#stdmutex)
+    + [`std::atomic<T>`](#stdatomict)
+14. [Threads](#14-threads)
 
 # 1. Piattaforme di esecuzione
 
@@ -1255,72 +1260,106 @@ Base2* b2;
             - Invalida il `std::future<T>` originale
         - E' anche copiabile
 
-### Forme di sincronizzazione
-- `std::mutex`
-    - `lock()` e `unlock()`
-    - Internamente memorizza una memory barrier, ovvero l'ID dell'owner (scrivibile con `test-and-set`)
-    - Un thread che chiama `lock()` su un `std::mutex` gia' preso viene bloccato
-    - Altri tipi
-        - `std::recursive_mutex` e' ricorsivo (`lock()` piu' volte) ma occorre chiamare `unlock()` tante volte quanto e' stato chiamato il `lock()` (si comporta quindi come un semaforo)
-        - `std::timed_mutex` aggiunge i metodi `try_lock_for()` e `try_lock_until()`
-            - Esempio
-                ```cpp
-                #include <mutex>
-
-                std::mutex m;
-
-                void someFunction() {
-                    while (m.try_lock() == false) {
-                        do_some_work();
-                    }
-
-                    // Il lock e' gia' stato acquisito da `try_lock`, quindi
-                    // `l` registra `m` al suo interno, senza acquisirlo una
-                    // seconda volta
-                    std::lock_guard<std::mutex> l(m, std::adopt_lock);
-                    
-                    // ...
-                    
-                    // quando l viene distrutto, rilascia il possesso del mutex
-                }
-                ```
-        - `std::recursive_timed_mutex`
-      - `std::lock_guard<Lockable>` per il paradigma RAII
-        - `lock()` nel suo costruttore e `unlock()` nel suo distruttore
+### `std::mutex`
+- `lock()` e `unlock()`
+- Internamente memorizza una memory barrier, ovvero l'ID dell'owner (scrivibile con `test-and-set`)
+- Un thread che chiama `lock()` su un `std::mutex` gia' preso viene bloccato
+- Ne' copiabile, ne' movibile
+- Non si accede mai a `std::mutex` direttamente, ma si usano:
+    - `std::lock_guard<Lockable>`
+    - `std::unique_lock<Lockable>`
+- Altri tipi
+    - `std::recursive_mutex` e' ricorsivo (`lock()` piu' volte) ma occorre chiamare `unlock()` tante volte quanto e' stato chiamato il `lock()` (si comporta quindi come un semaforo)
+    - `std::timed_mutex` aggiunge i metodi `try_lock_for()` e `try_lock_until()`
         - Esempio
             ```cpp
-            template <class T>
-            class shared_list {
-                std::list<T> list;
-                std::mutex m; // il `lock_guard` lavora su un mutex
-            
-                T& operator=(const shared_list<T>& that);
-                shared_list(const shared_list<T>& that);
+            #include <mutex>
 
-            public:
-            
-                int size() {
-                    std::lock_guard<std::mutex> l(m);
-                    return list.size();
-                    // il distruttore di `lock_guard` rilascia il lock
+            std::mutex m;
+
+            void someFunction() {
+                while (m.try_lock() == false) {
+                    do_some_work();
                 }
 
-                T front() {
-                    std::lock_guard<std::mutex> l(m);
-                    return list.front();    // se lancia un'eccezione,
-                                            // stack-unwinding chiama
-                                            // il distrutore di `lock_guard`
-                }
-            
-                void push_front(T t) {
-                    std::lock_guard<std::mutex> l(m);
-                    list.push_front(t);
-                }
-            };
+                // Il lock e' gia' stato acquisito da `try_lock`, quindi
+                // `l` registra `m` al suo interno, senza acquisirlo una
+                // seconda volta
+                std::lock_guard<std::mutex> l(m, std::adopt_lock);
+                
+                // ...
+                
+                // quando l viene distrutto, rilascia il possesso del mutex
+            }
             ```
-    - `std::unique_lock<Lockable>` estende `lock_guard`
-        - Consente di rilasciare e riacquisire l'oggetto `Lockable` tramite `unlock()` e `lock()` (in questo ordine)
-            - Possono lanciare `std::system_error`
-        - Il costruttore ha piu' politiche di gestione
-            - `adopt_lock` verifica che il thread possieda gia' il `Lockable` passato come parametro e lo adotta
-            - `defer_lock` si limita a registrare il riferimento al `Lockable`, senza cercare di acquisirlo
+    - `std::recursive_timed_mutex`
+    - `std::lock_guard<Lockable>` per il paradigma RAII
+    - `lock()` nel suo costruttore e `unlock()` nel suo distruttore
+    - Esempio
+        ```cpp
+        template <class T>
+        class shared_list {
+            std::list<T> list;
+            std::mutex m; // il `lock_guard` lavora su un mutex
+        
+            T& operator=(const shared_list<T>& that);
+            shared_list(const shared_list<T>& that);
+
+        public:
+        
+            int size() {
+                std::lock_guard<std::mutex> l(m);
+                return list.size();
+                // il distruttore di `lock_guard` rilascia il lock
+            }
+
+            T front() {
+                std::lock_guard<std::mutex> l(m);
+                return list.front();    // se lancia un'eccezione,
+                                        // stack-unwinding chiama
+                                        // il distrutore di `lock_guard`
+            }
+        
+            void push_front(T t) {
+                std::lock_guard<std::mutex> l(m);
+                list.push_front(t);
+            }
+        };
+        ```
+- `std::unique_lock<Lockable>` estende `lock_guard`
+    - Consente di rilasciare e riacquisire l'oggetto `Lockable` tramite `unlock()` e `lock()` (in questo ordine)
+        - Possono lanciare `std::system_error`
+    - Il costruttore ha piu' politiche di gestione
+        - `adopt_lock` verifica che il thread possieda gia' il `Lockable` passato come parametro e lo adotta
+        - `defer_lock` si limita a registrare il riferimento al `Lockable`, senza cercare di acquisirlo
+- Costa poco in caso di `std::mutex` libero, ma causa il blocco di altri thread, che possono essere schedulati anche molto dopo rispetto al rilascio del `std::mutex`
+
+### `std::atomic<T>`
+- Accesso in modo atomico a `T`
+    - Internamente implementato con uno spinlock
+- Migliore del `std::mutex` per dati elementari
+    - `std::mutex` va utilizzato per lunghe sezioni critiche
+- `load()`, `store()`, `operator++()` per numeri
+    - Esempio
+        ```cpp
+        std::atomic<boolean> done = false;
+
+        void task1() {
+            while (!done.load()) { process(); }
+        }
+
+        void task2() {
+            wait_for_some_condition();
+            done.store(true);
+        }
+
+        void main() {
+            auto f1 = std::async(task1);
+            auto f2 = std::async(task2);
+        }
+        ```
+- Vieta al compiler e alla CPU il riordinamento delle istruzioni
+- `fetch_add(val)` e `fetch_sub(val)` per `+=` e `-=` rispettivamente
+- `exchange(val)` per lo scambio di valori
+
+# 14. Threads
