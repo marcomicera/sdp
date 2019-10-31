@@ -85,6 +85,14 @@ Course held by Prof. Malnati
     + [`std::mutex`](#stdmutex)
     + [`std::atomic<T>`](#stdatomict)
 14. [Threads](#14-threads)
+    + [Creazione di thread secondari](#creazione-di-thread-secondari)
+    + [Restituzione dei risultati](#restituzione-dei-risultati)
+      - [Cosa succede quando un thread fallisce](#cosa-succede-quando-un-thread-fallisce)
+      - [Come terminare un thread](#come-terminare-un-thread)
+      - [Thread lifecycle in RAII](#thread-lifecycle-in-raii)
+      - [Retrieve results while secondary thread is still running](#retrieve-results-while-secondary-thread-is-still-running)
+    + [Accedere al thread corrente](#accedere-al-thread-corrente)
+15. [Condition variables](#15-condition-variables)
 
 # 1. Piattaforme di esecuzione
 
@@ -1363,3 +1371,178 @@ Base2* b2;
 - `exchange(val)` per lo scambio di valori
 
 # 14. Threads
+
+### Creazione di thread secondari
+- `std::thread`
+- Il costruttore accetta un `Callable`
+    - Funzione
+    - Lamba expression
+    - Oggetto funzionale
+- Inizia subito ad eseguire
+    - Al contrario di `t.start()` in Java
+- Esempio
+    ```cpp
+    #include <thread>
+    void f() { std::cout << "Up & running!" << std::endl; }
+    int main() {
+        std::thread t(f);
+        t.join(); // il main thread aspetta `t`
+    }
+    ```
+- Il passaggio di variabili per reference va svolto con il wrapper `std::forward`
+    - Il wrapper `std::forward` viene copiato, ma conserva il *tratto* dei tipi (copiabile o no, movibile o no, etc.)
+    - `std::cref` per `const&`
+    - Usare reference values come ritorno: occorre sincronizzazione per capire quando il risultato e' pronto
+        1. `t.join()` per aspettare la morte del thread
+            - Esempio (`async` e `future` basterebbero)
+                ```cpp
+                #include <thread>
+                void f(int& result) { result = /* ... */; }
+                int main() {
+                    int res1, res2;
+                    std::thread t1(f, std::ref(res1));
+                    std::thread t2(f, std::ref(res2));
+                    t1.join(); t2.join();
+                    std::cout << res1 << " " << res << std::endl;
+                }
+                ```
+        2. Condition variables
+    - Non si ha passaggio di parametri quando il thread lavora su un oggetto funzionale (funtore)
+        - I parametri sono gia' incapsulati nell'oggetto
+        - Problemi di sincronizzazione e accesso alla memoria
+- Differenza tra `std::thread` e `std::async`
+    - `std::async` puo' essere attivato in modalita' lazy, con `std::thread` no
+    - `std::thread` alloca uno stack (di solito 1MB)
+    - Non c'e' un meccanismo per [accedere al risultato](#restituzione-dei-risultati)
+        - `std::thread` puo' [lanciare un'eccezione](#cosa-succede-quando-un-thread-fallisce)
+- I thread hanno `get_id()`
+
+### Restituzione dei risultati
+
+#### Cosa succede quando un thread fallisce
+1. Direttiva `CreateThread`, che ha come parametri `stackSize`
+1. Lo stack viene allocato, default 1MB
+1. Viene creato un *Thread Kernel Object*, cosi' che lo scheduler possa utilizzarlo
+    - L'oggetto contiene la copia dei registri della CPU
+    - L'*Instruction Pointer* punta ad una funzione della *run-time library* RTL
+        ```cpp
+        /**
+         * @param f     puntatore alla funzione da eseguire
+         * @param p     contesto
+         */
+        VOID RTLUserThreadStart(f, p) {
+            __try {
+                ExitThread((*f)(p));
+            } __except(e) {
+                ExitProcess(/* ... */);
+            }
+        }
+        ```
+    - I due parametri sono gia' nello stack del thread
+1. L'exit code del thread e' nel *Thread Kernel Object*
+    - Inizializzato a `-2`, `STILL_ACTIVE`
+1. Il thread va in esecuzione
+    - Successo: viene eseguita `ExitThread()`
+        - Rimuove il thread dallo scheduler settando `Signaled = FALSE` del *Thread Kernel Object*
+        - Il thread non raggiungera' mai `return`, non potra' quindi causare uno stack underflow
+        - Dealloca lo stack del thread
+    - Fallimento: viene eseguita `ExitProcess()`
+        - `std::terminate` in Linux
+        - Termina l'intero processo
+
+#### Come terminare un thread
+- Movimento ad un altro oggetto
+- Aspettare la sua terminazione con `join()`
+- `detach()` per renderlo un daemon thread
+
+Se nessuna di queste tre cose viene effettuata, eccezione:
+- `ExitProcess()` in Windows
+- `std::terminate()` in Linux
+
+Anche il thread principale segue le stesse regole, quindi termina l'intero processo (**e tutti i suoi thread**) al suo termine.
+
+#### Thread lifecycle in RAII
+```cpp
+#include <thread>
+
+class thread_guard {
+    std::thread& tl
+public:
+    thread_guard(std::thread& t_): t(t_) {}
+
+    ~thread_guard() {
+        if (t.joinable()) t.join(); // prevents exception!
+    }
+
+    thread_guard(thread_guard const& )=delete;
+    thread_guard& operator=(thread_guard const&)=delete;
+};
+```
+
+#### Retrieve results while secondary thread is still running
+- A `std::mutex` is not enough
+    - It doesn't tell whether the data is actually ready or not
+- `std::mutex` and a `boolean` indicating whether the data is ready or not
+    - Main thread should be waiting in polling
+- Solution: `std::promise<T>`
+    - One `std::promise<T>` object for each intermediate results
+    - Un `std::promise<T>` ha associato un `std::future<T>`
+        - Il chiamante puo' quindi chiamare la `get_future().get()` e:
+            - Bloccarsi in caso il dato non sia pronto
+            - Ricevere una exception in caso la abbia tirata il thread secondario
+            - Ricevere il dato pronto
+    - Esempio
+        ```cpp
+        #include <future>
+
+        void f(std::promise<std::string> p) {
+            try {
+                std::string result = /* ... */;
+                p.set_value(std::move(result));
+
+                /** Per renderlo disponibile solo a thread terminato:
+                 *      p.set_value_at_thread_exit(std::move(result));
+                 *  oppure:
+                 *      p.set_exception_at_thread_exit(std::exception_ptr p);
+                 */
+
+                // Implicit operations
+                // 1. ExitThread((*f)(p));
+                // 2. Destructors
+                // 3. return;
+
+            } catch (/* ... */) {
+                p.set_exception(std::current_exception());
+            }
+        }
+        
+        int main() {
+            std::promise<std::string> p;
+            std::future<std::string> f = p.get_future();
+
+            // Si forza il movimento
+            std::thread t(f, std::move(p));
+            t.detach();
+
+            // ...
+
+            /* Potrebbe ricavare il risultato prima
+               che il secondo thread termini */
+            std::string result = f.get();
+        }
+        ```
+- `std::packaged_task<T(Args...)>`
+    - Ha associato un `std:future<T>`
+    - Realizza il ***Thread pool***
+        - *BlockingQueue* di dati per thread
+        - `submit(std::packaged_task<T(Args)> t)`
+        - `quit()` sul thread pool termina tutti i threads
+
+### Accedere al thread corrente
+- Namespace `std::this_thread`
+    - `std::this_thread::get_id()`
+    - `std::this_thread::sleep_for(duration)`, per *almeno* `duration` ms
+    - `std::this_thread::sleep_until(time_point)`
+    - `std::this_thread::yield()`
+
+# 15. Condition variables
