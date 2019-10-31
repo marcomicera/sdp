@@ -93,6 +93,11 @@ Course held by Prof. Malnati
       - [Retrieve results while secondary thread is still running](#retrieve-results-while-secondary-thread-is-still-running)
     + [Accedere al thread corrente](#accedere-al-thread-corrente)
 15. [Condition variables](#15-condition-variables)
+    + [Intro](#intro)
+    + [Info](#info)
+    + [Esempio](#esempio)
+    + [Cosa serve per il problema produttore/consumatore](#cosa-serve-per-il-problema-produttore-consumatore)
+    + [Lazy evaluation: the Singleton pattern](#lazy-evaluation--the-singleton-pattern)
 
 # 1. Piattaforme di esecuzione
 
@@ -1546,3 +1551,137 @@ public:
     - `std::this_thread::yield()`
 
 # 15. Condition variables
+
+### Intro
+
+- L'approccio `std::promise` non e' scalabile
+    - Aspettare una computazione svolta da piu' thread e' problematico per l'*ordine* delle `get()`, che sono bloccanti
+- Dati condivisi richiedono l'utilizzo di un `std::mutex`
+- Base pattern
+    ```cpp
+    bool ready;
+    std::mutex readyFlagMutex;
+
+    // Thread
+    {
+        // lock_guard con possibilita' di chiamare `lock()` e `unlock()`
+        std::unique_lock<std::mutex> ul(readyFlagMutex);
+
+        while (!ready) {
+            ul.unlock();
+
+            // timeout troppo piccolo -> active polling
+            // timeout troppo grande -> poca reattivita'
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            ul.lock();
+        }
+
+        // uso della risorsa
+
+    } // rilascia il lock
+    ```
+
+### Info
+- Richiede l'uso di un `std::unique_lock<Lockable>`
+- `wait()` e `notify()`
+    - `wait(unique_lock)`
+        - Operazioni interne
+            - Se lo `unique_lock` e' in possesso
+                1. Rilascia lo `unique_lock`
+                    - Per consentire ad altri thread per accedere ai dati condivisi
+                1. Sospende il thread corrente
+            - Condizioni per procedere:
+                - Un altro thread chiama la `notify()` (one or all)
+                - Timeout
+                - Notifica spuria
+            - Ri-acquisizione dello `unique_lock`
+            - Il thread ricomincia l'esecuzione (resume dell'O.S.)
+                - Sistema a "doppia porta": condizione verificata e ri-acquisizione del lock
+    - `notify_all()`
+    - `notify_one()`
+- Mantiene una lista di thread in attesa
+
+### Esempio
+```cpp
+use namespace std;
+mutex m;
+condition_variable cv;
+int data;
+
+void produce() {
+    // computing data...
+    {
+        lock_guard<mutex> lg(m);
+        data = /* ... */;
+        cv.notify_one(); /* se nessuno ha chiamato la `wait()` va avanti,
+                            con il rischio di sovrascrivere `data` */
+    } // mutex released
+    // ...
+}
+
+void consume() {
+    unique_lock<mutex> ul(m);
+    cv.wait(ul);
+    // using data...
+}
+```
+
+### Cosa serve per il problema produttore/consumatore
+- Una queue di dati
+    - Ha una variabile di stato: pieno/vuoto/dimensione
+    - Per queue circolari, la variabile di stato consiste nei puntatori *head* e *tail*
+- Un `std::mutex` per progettere la queue condivisa
+- Una condition variable per gestire:
+    - Lettura su queue vuota
+    - Scrittura su queue piena
+- Esempio con versione estesa di `wait()`
+    ```cpp
+    std::queue<data_chunk> data_queue;  // dato condiviso
+    std::mutex mut;                     // protegge la queue
+    std::condition_variable data_cond;  // indica coda non vuota
+
+    void producer() {
+        while (more_data_to_prepare()) {
+            data_chunk const data = prepare_data();
+            stD::lock_guard<std::mutex> lk(mut); // solo quando il dato e' pronto
+            data_queue.push(data);
+            data_cond.notify_one();
+        }
+    }
+
+    void consumer() {
+        while (true) {
+            std::unique_lock<std::mutex> lk(mut);
+            data_cond.wait(lk, [](){ return !data_queue.empty();} ); // lambda must return bool
+            data_chunk data = data_queue.front();
+            data_queue.pop()
+            lk.unlock();
+            process(data);
+            if (is_last_chunk(data) {
+                break;
+            }
+        }
+    }
+    ```
+- `wait_for(duration)` e `wait_until(time_point)`
+
+### Lazy evaluation: the Singleton pattern
+- Lazy expression da eseguire una volta sola
+- In un ambiente multi-threaded, un Singleton non assicura la sua proprieta' di singola istanza
+- `std::once_flag` e `std::call_once()`
+    ```cpp
+    #inlcude <mutex>
+
+    class Singleton {
+        static Singleton *instance;
+        static std::once_flag inited;
+        Singleton() {}
+    public:
+        static Singleton *getInstance() {
+            std::call_once(inited, [] () {
+                instance = new Singleton();
+            })
+            return instance;
+        }
+    };
+    ```
