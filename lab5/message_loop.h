@@ -7,8 +7,23 @@
 
 
 #include <future>
+#include <queue>
 
+/**
+ * Un ciclo dei messaggi, o message-loop, è un tipico costrutto di programmazione adottato in
+ * presenza di interfacce grafiche o di sistemi reattivi che intendono prediligere l’esecuzione sincrona
+ * di call-back nell’ambito di un singolo thread pur offrendo la possibilità di reagire allo scorrere del tempo.
+ * Il costrutto può essere implementato sotto forma di classe che incapsula un thread, una coda di
+ * messaggi basati su priorità e le necessarie primitive di sincronizzazione volte a garantire la
+ * correttezza dell’esecuzione.
+ *
+ * La classe offre i seguenti metodi thread-safe:
+ */
 class message_loop {
+
+protected:
+
+    std::priority_queue<std::shared_ptr<std::packaged_task<void()>>> queue;
 
 public:
 
@@ -43,5 +58,11 @@ public:
     void post_delayed(std::shared_ptr<std::packaged_task<void()>>, std::chrono::milliseconds);
 };
 
+/*
+ * Competenze da acquisire
+ * - Tecniche di sincronizzazione
+ * - Uso di packaged_task, condition_variable, once_flag
+ * - Uso delle funzioni relative allo scorrere del tempo
+ */
 
 #endif //LAB1_MESSAGE_LOOP_H
