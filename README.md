@@ -96,8 +96,9 @@ Course held by Prof. Malnati
     + [Intro](#intro)
     + [Info](#info)
     + [Esempio](#esempio)
-    + [Cosa serve per il problema produttore/consumatore](#cosa-serve-per-il-problema-produttore-consumatore)
-    + [Lazy evaluation: the Singleton pattern](#lazy-evaluation--the-singleton-pattern)
+    + [Cosa serve per il problema produttore/consumatore](#cosa-serve-per-il-problema-produttoreconsumatore)
+    + [Lazy evaluation: the Singleton pattern](#lazy-evaluation-the-singleton-pattern)
+16. [Interprocess communication](#16-interprocess-communication)
 
 # 1. Piattaforme di esecuzione
 
@@ -1685,3 +1686,117 @@ void consume() {
         }
     };
     ```
+
+# 16. Interprocess communication
+
+- I processi, al contrario dei thread, non condividono lo spazio di indirizzamento
+    - Processi esterni gia' esistenti con il quale interfacciarsi (e.g., database)
+    - Security concerns (e.g., Chrome tabs)
+    - Distributed apps
+    - Cicli di vita diversi
+- Ogni processo ha un primary thread
+
+### Processi in Windows
+- `CreateProcess(...)`
+- Cosa puo' essere ereditato:
+    - Environment variables
+    - Oggetti kernel (file handles, semaphores, pipes) a patto che siano stati creati con un flag apposito
+- Cosa non puo' essere ereditato:
+    - Handle a thread/processi
+    - Librerie dinamiche
+    - Regioni di memoria
+
+### Processi in Linux
+- `fork()`
+    - Lo spazio di indirizzamento viene duplicato in *CopyOnWrite*
+- `exec*()`
+    - Un-mapping dello spazio di indirizzamento
+    - Rimappa lo spazio di indirizzamento sul nuovo eseguibile
+    - Il processo figlio comincia dal `main`
+    - Esempio
+        ```c
+        int main(const int argc, const char* const argv[]) {
+            pid_t ret = fork();
+            switch (ret) {
+                case -1:
+                    puts("parent: error: fork failed!"); break;
+                case 0;
+                    puts("child: here (before execl)!");
+                    if (execl("./ch.exe", "./ch.exe", 0) == -1) {
+                        perror("child: execl failed");
+                    }
+                    puts("child: here (after execl)!");
+                    // it nevers gets here
+                    break;
+                default:
+                    printf("parent: child pid=%d\n", ret); break;
+            }
+            return 0;
+        }
+        ```
+
+#### `fork()` e threads
+- Il processo figlio ha sempre un solo thread
+- I thread secondari del processo padre non si duplicano
+- Gli oggetti di sincronizzazione presenti nel padre possono trovarsi in stati incongruenti
+    - Se uno dei thread del processo padre acquisisce un mutex, il processo figlio vedra' quel mutex come appartenente ad un thread che non esiste nel suo spazio di indirizzamento: qualsiasi tentativo di acquisizione di quel mutex da parte del processo figlio, lo portera' in una situazione di deadlock
+- Funzione da invocare prima di `fork()`
+    ```c
+    int pthread_atfork(
+        void (*prepare)(void),  /* invocata prima di `fork()`: e.g., liberazione
+                                   lock, o acquisizione di tutti i lock */
+        void (*parent)(void),   // solo dal padre, prima che `fork()` ritorni
+        void (*child)(void),    // solo dal figlio, prima che `fork()` ritorni
+    );
+    ```
+
+### IPC: InterProcess Communication
+- Scambio di dati
+    - I puntatori e gli handles non hanno senso al di fuori del proprio spazio di indirizzamento
+    - Formati basati su testo o binari
+- Comunicazione di eventi
+- Tipi di IPC
+    - Code FIFO di messaggi
+        - Blocchi di byte
+        - Piu' emittenti
+    - Pipe
+        - Monodirezionali o bidirezionali
+        - Binaria o a caratteri
+        - Comunicazione sincrona 1 ad 1
+    - Memoria condivisa
+        - I puntatori non hanno ancora senso, perche' gli indirizzi di partenza degli spazi di indirizzamento sono diversi
+        - Sincronizzazione interprocess necessaria
+            - Semafori
+                - Pagina fisica condivisa gestita atomicamente
+            - Mutex
+            - Eventi
+    - Files
+    - Sockets
+    - Signals (Linux only)
+- Gli oggetti kernel sono identificati:
+    - Tramite in numero in Linux
+    - Tramite una stringa in Windows
+
+### Sincronizzazione con oggetti kernel Windows
+- `WaitForSingleObject()`
+    - Sospende il thread in case il kernel object non sia in *stato attivo*
+- `WaitForMultipleObjects()`
+- Meccanismo generale
+    ```c
+    handle = LocateObject();
+    // ...
+    Wait(handle); // o `Signal(handle);`
+    // ...
+    CloseHandle(handle): // da entrambi i processi
+    ```
+- Stati
+    - Segnalato (attivo)
+        - Quando ha terminato l'esecuzione
+    - Non segnalato (passivo)
+- `Event`
+    - Non esiste in Linux
+    - Come le condition variable, il programma si blocca su un evento finche' non accade
+    - Creazione eventi
+        - `CreateEvent(...)`
+        - `OpenEvent(...)`: successo solo se il nome dell'evento esiste gia'
+    - `SetEvent(...)` e `ResetEvent(...)`
