@@ -1687,7 +1687,7 @@ void consume() {
     };
     ```
 
-# 16. Interprocess communication
+# 16. Interprocess communication on Windows
 
 - I processi, al contrario dei thread, non condividono lo spazio di indirizzamento
     - Processi esterni gia' esistenti con il quale interfacciarsi (e.g., database)
@@ -1781,6 +1781,7 @@ void consume() {
 - `WaitForSingleObject()`
     - Sospende il thread in case il kernel object non sia in *stato attivo*
 - `WaitForMultipleObjects()`
+    - Flag `WAIT_FOR_ALL`: operazione atomica
 - Meccanismo generale
     ```c
     handle = LocateObject();
@@ -1794,9 +1795,332 @@ void consume() {
         - Quando ha terminato l'esecuzione
     - Non segnalato (passivo)
 - `Event`
-    - Non esiste in Linux
+    - Non esiste in Unix
     - Come le condition variable, il programma si blocca su un evento finche' non accade
+    - Tipi
+        - Manual-reset: rimane nello stato in cui si porta
+        - Auto-reset: lo stato viene resettato quando l'evento accade
     - Creazione eventi
         - `CreateEvent(...)`
-        - `OpenEvent(...)`: successo solo se il nome dell'evento esiste gia'
+        - `OpenEvent(...)`: ha successo solo se il nome dell'evento esiste gia'
     - `SetEvent(...)` e `ResetEvent(...)`
+        - `ResetEvent(...)` provoca il fallimento di future wait
+    - `PulseEvent(...)` setta l'evento per poco tempo
+- `Semaphore`
+    - Stato segnalato se contatore > 0
+    - Stato non segnalato se contatore = 0
+    - Non puo' mai essere < 0
+    - `WaitForSingleObject()` decrementa se > 0
+    - `CreateSemaphore(...)` e `OpenSemaphore(...)`
+    - `WaitForSingleObject()` e `WaitForMultipleObjects()`
+    - `ReleaseSemaphore(...)`
+- Mutex
+    - Assicurano a piu' thread l'accesso in mutua esclusione
+    - Con timeout
+    - Conservano l'ID del thread che li ha acquisiti ed un contatore
+        - `ThreadID = 0` significa risorsa non acquisita, stato segnalato
+    - Sempre la stessa API
+- Occorre chiamare `close(HANDLE)` alla fine del ciclo di vita di un oggetto kernel
+
+#### Esempio di shared memory in Windows
+- Producer
+    ```cpp
+    /* L'evento va prima creato.
+       Niente di particolare accade
+       alla sua chiamata */
+    hE = CreateEvent(“done”,…);
+    hMut = CreateMutex(“m”);
+    /* NULL come parametro per
+       creare solamente una
+       shared memory area */
+    hFM = CreateFileMapping(…);
+    WaitForSingleObject(hMut);
+    /* Shared memory area nel proprio
+       spazio di indirizzamento */
+    ptr = MapViewOfFile(hFM,…);
+    // ...write to shared memory...
+    SetEvent(hE);
+    UnmapViewOfFile(hFM);
+    ReleaseMutex(hMut);
+    CloseHandle(…);
+    ```
+- Consumer
+    ```cpp
+    hE = CreateEvent(“done”, …);
+    hMut = CreateMutex(“m”);
+    hFM = CreateFileMapping(…);
+    WaitForMultipleObjects([hE, hMult], WAIT_ALL, …);
+    ptr = MapViewOfFile(hFM,…);
+    // ...read from shared memory...
+    UnmapViewOfFile(hFM);
+    ReleaseMutex(hMut);
+    CloseHandle(…);
+    ```
+
+#### Mailslot
+- Event queue for IPC
+- Processi anche su altre macchine
+- Mailslot client (producer) e mailslot server (consumer)
+- Mailslot creation example
+    ```cpp
+    HANDLE hSlot;
+    LPTSTR SlotName = TEXT("\\\\.\\mailslot\\ms1");
+    hSlot = CreateMailslot(SlotName,
+        0, // no maximum message size
+        MAILSLOT_WAIT_FOREVER, // no read timeout
+        (LPSECURITY_ATTRIBUTES)NULL /* default security (authorization),
+                                       Unfeasible for processes being 
+                                       launched on power on */
+    );
+    ```
+- Stesse API per la lettura dei file (ma sono bloccanti): `ReadFile(...)` e `ReadFileEx(...)`
+- `GetMailslotInfo(...)` restituisce:
+    - Il numero di messaggi
+    - La dimensione del primo messaggio da leggere
+- Mailslot server example
+    ```cpp
+    DWORD firstMessageSize, numberMessages, cbRead;
+    LPTSTR lpszBuffer;
+    BOOL fResult = GetMailslotInfo(hSlot, (LPDWORD)NULL, &firstMessageSize, &numberMessages, (LPDWORD)NULL);
+    if (fResult && firstMessageSize != MAILSLOT_NO_MESSAGE) {
+        fResult = ReadFile(hSlot, lpszBuffer, firstMessageSize, &cbRead, NUlL);
+    }
+    ```
+- Mailslot client example
+    ```cpp
+    LPTSTR Slot = TEXT("\\\\.\\mailslot\\ms1");
+    HANDLE hSlot = CreateFile(
+        Slot,
+        GENERIC_WRITE,
+        FILE_SHARE_READ,
+        (LPSECURITY_ATTRIBUTES)NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        (HANDLE)NULL);
+
+    // ...
+
+    LPTSTR lpszMessage = TEXT("Message one");
+
+    BOOL fResult = WriteFile(
+        hSlot,
+        lpszMessage,
+        (DWORD)(lstrlen(lpszMessage) + 1)*sizeof(TCHAR), 
+        &cbWritten,
+        (LPOVERLAPPED)NULL
+    );
+
+    // ...
+
+    CloseHandle(hSlot);
+    ```
+
+#### Pipe
+- Anonymous pipe
+    - Monodirezionali
+    - Come le pipe Unix
+    - Tra due processi parenti
+        - E.g., `|` per `stdout` dentro un `stdin`
+    - Byte-oriented
+    - La handle va duplicata (`DuplicateHandle(...)`) con un parametro che la rende *ereditabile*
+    - Informare il processo figlio della pipe
+        - Impostarglielo come `stdin` o `stdout`
+        - Condivisione della handle condivisa tramite altri mezzi (shared memory, command line, ...)
+    - `ReadFile(...)` e `WriteFile(...)`
+    - Solo sincrone (bloccanti)
+- Named pipe
+    - Bidirezionali
+    - Non esistono in Unix
+    - Name example: `\\ServerName\pipe\PipeName`
+        - Case-insensitive
+        - Unique
+    - `CreateNamedPipe(...)`, `OpenFile(...)`, `CallNamedPipe(...)`
+    - Gestibili come file: `ReadFile()`, `WriteFile()`
+    - Read modes: byte-oriented **and** message-oriented
+    - Wait modes: bloccante o non bloccante (callback)
+    - Server example
+        ```cpp
+        TSTR lpszPipename = TEXT("\\\\.\\pipe\\mynamedpipe");
+
+        hPipe = CreateNamedPipe(
+            lpszPipename
+            PIPE_ACCESS_DUPLEX, // bidirezionale
+            PIPE_TYPE_MESSAGE |  // message-oriented
+                PIPE_READMODE_MESSAGE | // scartare il messaggio alla lettura
+                PIPE_WAIT, // wait in assenza di messaggi
+            PIPE_UNLIMITED_INSTANCES, // unlimited message size
+            BUFSIZE,
+            BUFSIZE,
+            0,
+            NULL
+        );
+
+        // Lettura come se fosse un file
+        BOOL fSuccess = ReadFile(
+            hPipe, // handle to pipe
+            pchRequest, // buffer to receive data
+            BUFSIZE*sizeof(TCHAR), // size of buffer
+            &cbBytesRead, // number of bytes read
+            NULL
+        ); // not overlapped I/O
+        ```
+    - Client example
+        ```cpp
+        TSTR lpszPipename = TEXT("\\\\.\\pipe\\mynamedpipe");
+
+        HANDLE hPipe = CreateFile(
+            lpszPipename,
+            GENERIC_READ | GENERIC_WRITE, // read and write
+            0,
+            NULL,
+            OPEN_EXISTING,
+            0,
+            NULL
+        );
+        LPTSTR lpvMessage = TEXT("Default message from client.");
+        BOOL fSuccess = WriteFile(
+            hPipe,      // pipe handle
+            lpvMessage, // message
+            cbToWrite,  // message length
+            &cbWritten, // bytes written
+            NULL);      // not overlapped
+        ```
+
+#### File Mapping
+- Mappatura di una porzione del paging file nel proprio spazio di indirzzamento
+- Occorre sincronizzazione (e.g., mutex)
+- `CreateFileMapping(...)` crea un file mapping
+- `MapViewOfFile(...)` lo aggiunge allo spazio di indirizzamento e restituisce l'indirizzo di partenza
+- `UnmapViewOfFile(...)` e `CloseHandle(...)`
+
+#### Altri meccanismi
+- Socket
+    - Platform-independent
+    - Solo trasferimenti di array di byte
+- RPC
+
+# 17. Interprocess communication on Linux
+
+#### Identificativi
+- Linux kernel objects: handle file (non-negative integer)
+- IPC Linux kernel objects: chiave
+    - Chiave: numero
+    - Chiave uguale a 0: creazione oggetto nuovo
+    - Chiave diversa da 0: richiesta di oggetto esistente
+- Gli altri processi devono conoscere la chiave
+- `ftok()`: conversione tra nome e chiave
+
+#### Message Queues
+- Equivalente del Mailslot di Windows
+- Messaggi
+    ```cpp
+    struct message {
+        long type;
+        char messagetext [MESSAGESIZE];
+    };
+    ```
+- I processi che intendono comunicare si accordnao su:
+    - Pathname di un file esistente
+    - Project-ID (`0` to `255`)
+- API
+    ```cpp
+    /**
+     * Creazione/accesso
+     */
+    int msgget(ket_t key, int msgflg)
+
+    /**
+     * @param msqid     message queue id (handle)
+     * @param msgp      message queue pointer
+     */
+    int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg)
+
+     /**
+      * @param msgtyp   filter: 0 will return the first message.
+      *                 value > 0 will return the first message with
+      *                 corresponding type.
+      *                 value < 0 will return the minimum type field value
+      */
+    size_t msgrcv(int msqid, void *msgp, size_t, msgsz, long msgtyp, int msfgl)
+
+    /**
+     * Message control
+     *
+     * @param cmd   `IPC_RMID` rilascia le risorse
+     */
+    int msgctl(int msqid, int cmd, struct msqid_ds *buf)
+    ```
+
+#### Pipe
+- Equivalente delle anonymous pipes on Windows
+- Creati con `pipe()`
+    ```cpp
+    int pipe_fds[2];
+    int read_fd, write_fd;
+    pipe (pipe_fds);
+    read_fd = pipe_fds[0];
+    write_fd = pipe_fds[1];
+    ```
+- Usage example
+    ```cpp
+    int fds[2];
+    pid_t pid;
+    pipe (fds);
+    pid = fork ();
+    if (pid == (pid_t) 0) {
+    /* processo figlio */
+    close (fds[1]);
+        // ... Lettura dalla pipe
+    close (fds[0]);
+    }else {  /* processo padre*/
+    close (fds[0]);
+        // ... Scrittura sulla pipe
+    close (fds[1]);
+    }
+    ```
+
+#### FIFO
+- Equivalente delle named pipes on Windows
+- Si accede come se fosse un file
+
+#### Shared Memory
+- Mappano dei blocchi di memoria negli spazi di indirizzamento
+- API
+    ```cpp
+    /**
+     * @param size  dev'essere un multiplo di una pagina fisica,
+     *              altrimenti non funziona
+     */
+    int shmget(key_t key, size_t size, int shmflg)
+
+    /**
+     * Cambiare permessi, proprietario, rilascio risorse, etc.
+     *
+     * @param cmd  Possible values:
+     *              - IPC_STAT: copia le informazioni dalla
+     *                          struttura dati del kernel
+     *                          associata alla memoria
+     *                          condivisa all’interno della
+     *                          struttura puntata da buf
+     *              - IPC_SET:  scrive i valori contenuti nella
+     *                          struttura dati puntata da buf
+     *                          nell’oggetto kernel corrispondente
+     *                          alla memoria condivisa specificata
+     *              - IPC_RMID: marca il segmento come da rimuovere.
+     *                          Il segmento viene rimosso dopo che
+     *                          dell’ultimo processo ha effettuato il detach
+      */
+    int shmctl(int shmid, int cmd, struct shmid_ds *buf)
+
+    /** Mapping di shared memory object */
+    void *shmat(int shmid, const void *shmaddr, int shmflg)
+
+    /** Mapping di file normali */
+    void* mmap(void* start, size_t n, int prot, int flags, int fd, off_t off);
+
+    /** Unmapping */
+    int shmdt(const void *shmaddr)
+
+    /** Rilascio */
+    int munmap (void* start, size_t length);
+    ```
