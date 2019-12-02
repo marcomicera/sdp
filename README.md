@@ -115,6 +115,7 @@ Course held by Prof. Malnati
       - [Pipe](#pipe-1)
       - [FIFO](#fifo)
       - [Shared Memory](#shared-memory)
+- 18. [C# introduction](#18-c-introduction)
 
 # 1. Piattaforme di esecuzione
 
@@ -2138,5 +2139,367 @@ void consume() {
     int shmdt(const void *shmaddr)
 
     /** Rilascio */
-    int munmap (void* start, size_t length);
+    int munmap(void* start, size_t length);
+    ```
+
+# 18. C# introduction
+
+### Properties
+- Attributes (metadata, like Java annotations)
+- Primitive data wrappers
+    - Transparent boxing (e.g., from `int` to `Integer` in Java)
+    - Explicit unboxing (i.e., via casting)
+    - Wrapper classes can be modified
+- Accesso ai puntatori classici supportato
+
+### Achitettura .NET
+- Windows-only classes
+    - WPF, Web Forms, Windows Forms
+- Classi dati e XML
+    - `ADO.NET`, `SQL`, `XSLT`, `XML`
+- Classi base del Framework
+    - `System.Object` is the common ancestor
+    - Available on macOS, Linux, Android, etc.
+- VM: CLR (*Common Language Runtime*)
+    - Debug, eccezioni, type checks, JIT compilers
+    - Common Type System: `Boolean`, `Byte`, `Char`, occupano sempre lo stesso spazio
+    - Garbage collector, stack wolker
+    - Esegue il *managed code*: codice utilizzato per la costruzione di applicazioni .NET
+    - CIL: *Common Intermediate Language*
+        1. Consente al programmatore di non conoscere l'architettura della macchina sottostante, e quindi della grandezza dei tipi
+        1. I compiler su VM gestiscono tutto su stack (stack-based execution) invece che nei registri (register-based execution), perche' non conoscono l'architettura fisica sottostante.
+        1. Operare con lo stack e' molto meno efficiente rispetto ai registri della CPU
+        1. Il JIT compiler puo' tradurre queste operazioni utilizzando i registri
+- Piattaforma Windows
+
+### Hello world
+```cs
+using System;
+
+class Hello {
+    public static void Main() {
+        Console.WriteLine("Hello, world!");
+    }
+}
+```
+
+#### Compilation
+```shell
+C:\> csc Hello.cs
+C:\> hello.exe 
+Hello, world!
+```
+
+#### Struttura di esecuzione
+![C# execution structure](images/cs_exec_structure.png)
+
+### Disassembler example
+1.  ```cs
+    static int Add(int a, int b) { return a + b; }
+    ```
+1. Invocando il disassembler:
+    ```shell
+    C:\> ildasm Adder.cs
+    ```
+    Si ottiene:
+    ```cs
+    .method static int32 Add(int32 a, int32 b) {
+
+        // C instructions
+        ldarg.0 // push argument 0 on stack
+        ldarg.1
+        add // last two stack elements
+        ret // stack already has the return value
+    }
+    ```
+1. Il loader lancia il JIT compiler e genera istruzioni assembler (esempio x86):
+    ```assembler
+    # Salva i registri edx e ecx
+    mov dword ptr [rsp+10h], edx
+    mov dword ptr [rsp+8], ecx
+
+    # Arguments nei registri
+    mov ecx, dword ptr [rsp+10h]
+    mov eax, dword ptr [rsp+8]
+
+    add eax, ecx
+
+    # Libera cache e consente di inserire un breakpoint
+    # prima della return
+    jmp <next_nop_instruction>
+    nop
+
+    ret
+    ```
+
+### NGEN: Native image GENeration
+- Compilazione ahead of time
+    - In fase di installazione su una data piattaforma
+
+### Sintassi
+- `///` per documentazione in XML
+- Java-like
+- `switch()` non ha il comportamento *fall-through*
+- Niente salti `goto` all'interno di un blocco
+- ```cs
+    foreach(string s in args) { /* ... */ }
+    ```
+- Keyword `checked` e `unchecked` per controllare la generazione di overflow nelle espressioni
+- `var` e' l'equivalente di `auto` di C++
+- Tipi di dato
+    - `System.Object`
+        - `System.ValueType` (tipi valore)
+            - Contengono direttamente il dato
+                - Numerici interi
+                    - Con segno: `sbyte`, `short`, `int`, `long`
+                    - Senza segno: `byte`, `ushort`, `uint`, `ulong`
+                - Numerici reali
+                    - `float`, `double`, `decimal`
+                - Non numerici
+                    - `char` (Unicode), `bool`
+                - Riferimento
+                    - `object` base di tutti i tipi (`System.Object`)
+                    - `string`: sequenza immutabile di caratteri Unicode (`System.String`)
+            - Non possono valere `null`
+            - **Copiati per valore**
+            - `struct`
+                - Campi, metodi e costruttori
+                - No ereditarieta'
+                - Interfacce
+                - Allocati su stack, e non sullo heap
+            - `enun`
+                - Sintassi
+                    ```cs
+                    enum Color: byte {
+                        Black = 0,
+                        Red = 1,
+                        Green 2,
+                        Blue - 4,
+                        White = Red | Green | Blue,
+                    }
+                    ```
+        - Tipi riferimento
+            - Contengono un **puntatore al valore**
+            - `System.String`
+            - Classi, array, interfacci, tipi puntatore (references)
+            - Heap gestito dal Garbage Collector
+            - Possono valere `null`
+            - Copia: solo del puntatore
+- Boxing ed unboxing
+    ```cs
+    int i = 123;
+    Object o = i; // boxing automatico
+    int j = (int) o; // unboxing esplicito
+    ```
+
+#### Cosa memorizza il Garbage Collector per ogni variabile
+- Reference collector
+- Object value
+- Its type
+
+### Classi
+- Come in Java: ereditarieta' singola, estende multiple interfacce
+- Namespace + nome classe
+- Modificatori di visibilita'
+    - `public`
+    - `protected`
+    - `private`
+    - `internal` (del namespace)
+- Elementi delle classi
+    - Costanti (`const int`) (Java's `final`)
+    - Campi
+    - Metodi
+        - Implitic `this` argument
+    - Proprieta': campi con getter e setter
+        - Sintassi
+            ```cs
+            public class Button: Control {
+                private string _caption;
+                public string Caption {
+                    get { return _caption; } // optional
+                    set { // optional
+                        _caption = value;
+                        Refresh();
+                    }
+                }
+            }
+            ```
+            - Auto-generati
+                ```css
+                public class Test {
+                    public string Caption {
+                        get; set;
+                    }
+                }
+                ```
+    - Indicizzatori (`operator[]` di C++)
+        - Proprieta' di nome `this`
+        - Sintassi
+            ```cs
+            public class ListBox: Control {
+                private string[] items;
+                public string this[int index] {
+                    get { return items[index]; }
+                    set {
+                        items[index] = value;
+                        Repaint();
+                    }
+                }
+            }
+            ```
+    - Eventi
+    - Operatori
+    - Costruttori
+    - Distruttori
+- `static` e non-`static`
+
+### Interfacce
+- Possono definire:
+    - Metodi
+    - Proprieta'
+    - Indicizzatori
+    - Eventi
+- Sintassi
+    ```cs
+    // Solo la prima puo' essere una classe concreta
+    class EditBox: Control, IDataBound {}
+    ```
+
+### Callback e delegate
+- Instanze di tipo `delegate` hanno una lista di subscribers (watchers)
+    - `+=` per aggiungersi alla lista, `-=` per levarsi, `=` per sovrascrivere la lista
+- Example
+    1. Tipo `delegate`
+        ```cs
+        delegate void Handler(string msg);
+        ```
+    1. Instanziazione del tipo `delegate`
+        ```cs
+        // Non appena qualcuno attiva `myHandler`, `obj.someMethod` viene invocato
+        Handler myHandler = new Handler(myObj.someMethod);
+
+        // Aggiunge una callback
+        myHandler += new Handler(anotherObj.doSomething);
+        myHandler += evenAnotherObject.methodName; // nuova sintassi
+        ```
+    1. Si invoca il delegato
+        ```cs
+        myHandler("Message description"); // vengono chiamate tutte le callbacks
+        ```
+
+### Eventi
+- Keyword da aggiungere all'istanziazione di un tipo `delegate`
+    ```cs
+    event Handler myHandler;
+    ```
+- `+=`, `-=`, ma **non** `=`
+- Diventa `private`
+- Due parametri espliciti
+    1. `System.Object source`: mittente dell'evento
+    1. `System.EventArgs`: event details
+- Esempio
+    ```cs
+    public delegate void Handler(object sender, EventArgs e);
+
+    public class Button {
+
+        public event Handler Click;
+
+        protected void onClicked(/* ... */) {
+
+            // Copia in locale: in caso di accesso multithread
+            var clicked = Click;
+
+            if (clicked != null) {
+
+                // Solleva l'evento
+                clicked(this, new MouseEventArgs(/* ... */));
+            }
+        }
+    }
+
+    public class Test {
+
+        public static void MyHanlder(object sender, EventArgs e) {
+            // React to event...
+        }
+
+        public static void Main() {
+            Button b = new Button();
+            b.Click += new Handler(MyHandler);
+        }
+    }
+    ```
+    - Traduzione del compiler di `event`
+        - Come una property con `add` e `remove`
+        ```cs
+        class Button {
+
+            private Handler _clicked;
+
+            public event Handler Clicked {
+
+                add { // `+=`
+                    Action old, @new; // "@" = "temporary"
+                    do {
+                        old = _clicked;
+                        @new = old + value; // chiama `Deletage.Combine(old, value)`
+                    } while (Interlocked.CompareExchange( // atomica: per ambienti multithread
+                        ref _clicked, @new, old) != old);
+                }
+
+                remove { /* ... */ } // `-=`
+            }
+        }
+        ```
+
+### Lambda function
+- Sintassi
+    ```
+    (<params>) => <expression>
+    ```
+    ```
+    (<params>) => { <instruction>; }
+    ```
+- Automatic context (capture by reference) for vars having the same name
+    - Rimangono in vita
+- Example
+    ```cs
+    delegate bool D1();
+    delegate bool D2(int i);
+
+    class Test {
+
+        D1 del1;
+        D2 del2;
+
+        public void method(int input) {
+
+            int j = 0;
+
+            // Solo definizioni
+            del1 = () => j = 10; return j > input; }
+            del2 = (x) => { return x == j; }
+
+            bool result = del1();
+
+            // `j` continua ad esistere, perche' e' nelle lambda functions
+        }
+
+        public static void Main() {
+            Test test = new Test();
+            test.method(5);
+            bool result = test.del2(10); // true
+        }
+    }
+    ```
+
+### Attributes
+- Annotazioni del codice sorgente
+- Esempio
+    ```cs
+    pblic class OrderProcessor {
+        [WebMethod]
+        public void SubmitOrder(PurchaseOrder order) { /* ... */ }
+    }
     ```
