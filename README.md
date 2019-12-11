@@ -98,7 +98,7 @@ Course held by Prof. Malnati
     + [Esempio](#esempio)
     + [Cosa serve per il problema produttore/consumatore](#cosa-serve-per-il-problema-produttoreconsumatore)
     + [Lazy evaluation: the Singleton pattern](#lazy-evaluation-the-singleton-pattern)
-- 16. [Interprocess communication on Windows](#16-interprocess-communication-on-windows)
+16. [Interprocess communication on Windows](#16-interprocess-communication-on-windows)
     + [Processi in Windows](#processi-in-windows)
     + [Processi in Linux](#processi-in-linux)
       - [`fork()` e threads](#-fork-e-threads)
@@ -109,13 +109,34 @@ Course held by Prof. Malnati
       - [Pipe](#pipe)
       - [File Mapping](#file-mapping)
       - [Altri meccanismi](#altri-meccanismi)
-- 17. [Interprocess communication on Linux](#17-interprocess-communication-on-linux)
+17. [Interprocess communication on Linux](#17-interprocess-communication-on-linux)
       - [Identificativi](#identificativi)
       - [Message Queues](#message-queues)
       - [Pipe](#pipe-1)
       - [FIFO](#fifo)
       - [Shared Memory](#shared-memory)
-- 18. [C# introduction](#18-c-introduction)
+18. [C# introduction](#18-c-introduction)
+    + [Properties](#properties)
+    + [Achitettura .NET](#achitettura-net)
+    + [Hello world](#hello-world)
+      - [Compilation](#compilation)
+      - [Struttura di esecuzione](#struttura-di-esecuzione)
+    + [Disassembler example](#disassembler-example)
+    + [NGEN: Native image GENeration](#ngen--native-image-generation)
+    + [Sintassi](#sintassi)
+      - [Cosa memorizza il Garbage Collector per ogni variabile](#cosa-memorizza-il-garbage-collector-per-ogni-variabile)
+    + [Classi](#classi)
+    + [Interfacce](#interfacce)
+    + [Callback e delegate](#callback-e-delegate)
+    + [Eventi](#eventi)
+    + [Lambda function](#lambda-function)
+    + [Attributes](#attributes)
+19. [WPF](#19-wpf)
+    + [Visual rendering](#visual-rendering)
+    + [WPF development](#wpf-development)
+    + [WPF threads](#wpf-threads)
+      - [Dispatcher](#dispatcher)
+    + [DependencyProperty](#dependencyproperty)
 
 # 1. Piattaforme di esecuzione
 
@@ -2503,3 +2524,91 @@ Hello, world!
         public void SubmitOrder(PurchaseOrder order) { /* ... */ }
     }
     ```
+
+# 19. WPF
+
+### Visual rendering
+- Immediate mode
+    - Gli oggetti vengono (ri)disegnati invocando una callback dell'applicazione che si occupa del rendering
+    - GDI non mantiene info sugli oggetti disegnati
+- Retained mode
+    - Ciascun oggetto contiene dati sul proprio rendering
+    - Il sistema grafico mantiene la gerarchia degli oggetti grafici
+
+### WPF development
+- C#
+- XAML (XML-based)
+- Mix
+
+### WPF threads
+- Rendering thread
+- UI thread
+
+#### Dispatcher
+- Scambiatore di messaggi tra threads
+- Rendering thread e UI thread accedono alla coda del Dispatcher
+    - **Tutti** gli oggetti WPF hanno accesso al Dispatcher perche' derivano da `DispatcherObject`
+- `Invoke()`: sincrono, bloccante
+- `BeginInvoke()`: asincrono, non bloccante
+- Slow job example
+    ```cs
+    private void b1_Click(object sender, RoutedEventArgs e) {
+
+        b1.IsEnabled = false;
+
+        Task.Run(
+            () => {
+                DoSlowWork();
+                Dispatcher.BeginInvoke(
+                    DispatcherPriority.Normal,
+                    new Action(DoUIUpdate));
+            });
+    }
+
+    private void DoSlowWork() { /* ... */ }
+
+    private void DoUIUpdate() {
+        b1.IsEnabled = true;
+    }
+    ```
+
+### `DependencyProperty`
+- Informazioni grafiche
+- Esempio
+    ```cs
+    public partial class MyWindow: Window {
+
+    public static readonly DependencyProperty SizeProperty =
+        DependencyProperty.Register("Size", 
+                    typeof(double), 
+                    typeof(MyWindow), 
+                    new UIPropertyMetadata(3));
+
+    public double Size {
+        get { return (double) GetValue(SizeProperty); }
+        set { SetValue(SizeProperty, value); }
+    }
+
+    //…
+    }
+    ```
+- Registrarsi al cambiamento
+    ```cs
+    DependencyPropertyDescriptor sizeDescr = DependencyPropertyDescriptor.FromProperty(
+    MyWindow.SizeProperty, typeof(MyWindow));
+
+    if (sizeDescr!= null) {
+        sizeDescr.AddValueChanged(this, 
+        delegate {
+            // Add your propery changed logic here...
+        });
+    }
+    ```
+- Proprieta' aggiunte
+    - Dovute alla gerarchia degli elementi grafici
+    - Esempio
+        ```xml
+        <Canvas>
+            <Button Canvas.Top="20" Canvas.Left="20" Content="Ok"/>
+        </Canvas>
+        ```
