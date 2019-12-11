@@ -137,6 +137,12 @@ Course held by Prof. Malnati
     + [WPF threads](#wpf-threads)
       - [Dispatcher](#dispatcher)
     + [DependencyProperty](#dependencyproperty)
+20. [Multithreading in .NET e C#](#20-multithreading-in-net-e-c)
+    + [Classe `Thread`](#classe-thread)
+      - [Thread exceptions](#thread-exceptions)
+    + [Thread e applicazioni grafiche](#thread-e-applicazioni-grafiche)
+    + [Sincronizzazione in .NET](#sincronizzazione-in-net)
+      - [Monitor .NET](#monitor-net)
 
 # 1. Piattaforme di esecuzione
 
@@ -2611,4 +2617,93 @@ Hello, world!
         <Canvas>
             <Button Canvas.Top="20" Canvas.Left="20" Content="Ok"/>
         </Canvas>
+        ```
+
+# 20. Multithreading in .NET e C#
+
+- Ogni `System.Threading.Thread` c'e' un thread nativo, ma **non** il contrario
+- Tipi
+    - Foreground
+    - Background: l'applicazione puo' terminare prima
+
+### Classe `Thread`
+```cs
+// Corpo di un thread
+public delegate void ThreadStart();
+
+public sealed class Thread {
+
+    // `start`: metodo eseguito dal thread
+    public Thread(ThreadStart start);
+    public void Start();
+    public void Join();
+
+    // Lancia un `ThreadAbortException`. Se viene catturata,
+    // viene rilanciata (serve a svuotare lo stack).
+    public void Abort();
+
+    // proprietà
+    public IsAlive{get;}
+    public IsBackground{get;set;}
+
+    // membri statici
+    public static Thread CurrentThread{get;}
+    public static void Sleep(int ms);
+}
+```
+
+#### Thread exceptions
+Se un thread secondario fallisce, il thread principale **non** termina.
+
+### Thread e applicazioni grafiche
+```cs
+public class Control {
+
+    // Nuovo messaggio in coda, con delegato da eseguire.
+    // Bloccante.
+    public object Invoke(Delegate method,
+                         object []args);
+
+    // Come `Invoke()`, ma non bloccante
+    public IAsyncResult BeginInvoke(Delegate method,
+                                    object []args);
+
+    // Bloccante, restituisce il risultato
+    public object EndInvoke(IAsyncResult async);
+}
+```
+
+### Sincronizzazione in .NET
+
+####  Monitor .NET
+```cs
+public sealed class Monitor {
+
+    private Monitor();
+
+    // `obj` e' l'oggetto su cui ci si sincronizza
+    // (di oggetti nello heap, altrimenti non ha senso)
+    // (`this` per bloccare l'intera classe)
+    public static void Enter(object obj); // in the critical zone
+    public static void Exit(object obj);
+
+    public static void Wait(object obj);
+    public static void Pulse(object obj);
+    public static void PulseAll(object obj);
+}
+```
+- Equivalente di `std::mutex` di Win32
+- Ha anche una condition variable
+- `Enter()` puo' lanciare eccezioni
+    ```cs
+    try {
+        Monitor.Enter(this);
+        // ...
+    } finally {
+        Monitor.Exit(this);
+    }
+    ```
+    - Syntactic sugar
+        ```cs
+        lock(object obj) { /* code */ }
         ```
