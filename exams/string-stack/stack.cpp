@@ -13,7 +13,7 @@ private:
     int size;
     int nitems;
     mutex m;
-    condition_variable fullStack;
+    condition_variable nonEmptyStack;
 public:
     Stack(int N) : size(N), nitems(0) {
         stack = new wstring[N];
@@ -26,7 +26,7 @@ public:
     void push(wstring item) {
         unique_lock<mutex> ul(m);
 
-        fullStack.wait(ul, [this]() { return nitems != size; });
+        nonEmptyStack.wait(ul, [this]() { return nitems != size; });
 
         stack[nitems] = std::move(item);
 
@@ -43,7 +43,7 @@ public:
 
             wstring popped_item = stack[nitems];
 
-            fullStack.notify_all();
+            nonEmptyStack.notify_all();
 
             return popped_item;
         }
