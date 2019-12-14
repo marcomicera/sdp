@@ -663,7 +663,7 @@ public:
     ```
 - Distruttori virtuali
     - Se una classe ha una funzione `virtual`, dovrebbe avere anche il distruttore `virtual`, altrimenti potrebbe essere chiamato un distruttore sbagliato
-- Per far si' che il compiler distingua quali implementazioni usare quando viene utilizzato un puntatore alla super-classe, le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta ad una **V-Table** che ha tante entry quanti sono i metodi `virtual` nella classe stessa
+- Per far si' che il compiler distingua quale implementazione usare quando viene invocato un metodo poliformico (overridden), le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta ad una **V-Table** che ha tante entry quanti sono i metodi `virtual` nella classe stessa
     - Le entry nella V-Table contengono gli indirizzi delle implementazioni concrete dei metodi polimorfici
     - La V-Table e' statica, costruita a compile-time, condivisa da tutte le istanze concrete della stessa classe
     - Ereditarieta'
@@ -697,8 +697,11 @@ Base2* b2;
         - `explicit` avverte il compiler di non utilizzare la funzione per effettuare `static_cast<T>`
     - Esportatore:
         ```cpp
-        Base1 Derivata::operator_cast() { /* ... */} // FIXME
+        Base1 Derivata::operator_cast() { /* ... */ } // FIXME
         ```
+- Done at compile time
+    - No guarantee it actually makes sense
+    - Efficient
 - Viene cambiata il puntatore alla V-Table
     - Durante un downcast, la dimensione della V-Table diminuisce (il valore del puntatore aumenta)
 - L'upcasting e' sempre garantito, il downcasting no
@@ -732,7 +735,7 @@ Base2* b2;
 ### Puntatori a funzione
 - Syntax
     ```cpp
-    <return_value> (*var) (<arguments>)
+    <return_value> (*name) (<arguments>)
     ```
 - Example
     ```cpp
