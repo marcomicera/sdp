@@ -122,7 +122,7 @@ Course held by Prof. Malnati
       - [Compilation](#compilation)
       - [Struttura di esecuzione](#struttura-di-esecuzione)
     + [Disassembler example](#disassembler-example)
-    + [NGEN: Native image GENeration](#ngen--native-image-generation)
+    + [NGEN: Native image GENeration](#ngen-native-image-generation)
     + [Sintassi](#sintassi)
       - [Cosa memorizza il Garbage Collector per ogni variabile](#cosa-memorizza-il-garbage-collector-per-ogni-variabile)
     + [Classi](#classi)
@@ -261,7 +261,7 @@ Funziona allo stesso modo. Ne esistono 4:
 | `wWinMain()` | yes     | gui     |
 
 #### Compiling with `-nostdlib`
-Take a look at the [example](ex1-nostdlib) ([guide](https://blogs.oracle.com/linux/hello-from-a-libc-free-world-part-1-v2)).
+Take a look at the [example](nostdlib-example) ([guide](https://blogs.oracle.com/linux/hello-from-a-libc-free-world-part-1-v2)).
 
 # 3. Allocazione della memoria
 
