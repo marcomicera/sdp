@@ -1259,7 +1259,7 @@ Base2* b2;
     - Semaphor, pipe, signal, futex
 
 # 13. Programmazione concorrente in C++
-- C++ standardizza il concetto di thread in `std::thread`
+C++ standardizza il concetto di thread in `std::thread`
 
 ### Esecuzione asincrona
 ```cpp
@@ -1310,7 +1310,7 @@ Base2* b2;
     - `std::async` puo' non creare un thread se ci sono poche risorse
     - Pericoloso perche' lo stack viene copiato per ogni thread
 - `std::launch::deferred`
-    - Lazy evaulation upon calling `get()` or `wait()`
+    - Lazy evaluation upon calling `get()` or `wait()`
     - Usato in caso di tante richieste simultanee
     - Il sistema prova a creare un secondo thread, altrimenti segna l'attivita' come *deferred*
     - Il metodo `shared()` su un `std::future<T>` ritorna un `std::shared_future<T>`
