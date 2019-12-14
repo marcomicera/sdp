@@ -32,7 +32,7 @@ Course held by Prof. Malnati
     + [Allocazione statica e dinamica](#allocazione-statica-e-dinamica)
     + [Puntatori e il loro utilizzo](#puntatori-e-il-loro-utilizzo)
     + [Allocazione in Linux](#allocazione-in-linux)
-    + [Allocazione in Windows](#allocazione-in-windows)
+    + [Allocazione in Windows (multiple heaps)](#allocazione-in-windows-multiple-heaps)
 4. [Introduzione al C++](#4-introduzione-al-c)
 5. [Gestione delle eccezioni](#5-gestione-delle-eccezioni)
 6. [Composizione di oggetti](#6-composizione-di-oggetti)
@@ -275,10 +275,6 @@ La MMU ha, per ogni pagina, un bit di:
     - The copy operation is hence deferred to the first write. It's done with an interrupt
     - Utilizzato dalla `fork()` quando viene creato lo spazio di indirizzamento del child process
 
-###### Accesso a locazioni non mappate
-- Segmentation fault on Linux
-- Access violation on Windows
-
 ##### Ciclo di vita delle variabili 
 - Globali: prima dell'esecuzione del programma 
 - Locali: alla chiamata di una funzione 
@@ -287,18 +283,22 @@ La MMU ha, per ogni pagina, un bit di:
 
 ### Spazio di indirizzamento
 - Diverse aree per garantire diversi tipi di accesso (R/W/X)
+- Accesso a locazioni non mappate
+    - Segmentation fault on Linux
+    - Access violation on Windows
 - Aree
     - Area protetta (ad uso dell'O.S.)
     - Variabili d'ambiente
-    - Codice eseguibile
-    - Stack
+    - Codice eseguibile (R/X)
+    - Stack (R/W)
         - Variabili locali
             - Ciclo di vita della funzione/blocco
             - Indirizzo relativo all'inizio dello stack
             - Valore iniziale casuale
         - Valori di ritorno
         - Parametri
-    - Variabili globali
+    - Costanti (R)
+    - Variabili globali (R/W)
         - Indirizzo fisso e assoluto determinato dal compilatore e linker
             - Perche' devono essere sempre accessibili
         - Inizializzate o non
@@ -309,7 +309,7 @@ La MMU ha, per ogni pagina, un bit di:
 - Lo starting point nello spazio virtuale e' random, cosi' da rendere la vita difficile ai virus
 - [Page file](https://www.howtogeek.com/126430/htg-explains-what-is-the-windows-page-file-and-should-you-disable-it/)
     - When your RAM becomes full, Windows moves some of the data from your RAM back to your hard drive, placing it in the page file
-    - This file is a form of virtual memory.
+    - This file is a form of virtual memory
 
 ### Allocazione statica e dinamica
 - Linux
@@ -356,9 +356,9 @@ La MMU ha, per ogni pagina, un bit di:
         - `void* sbrk(intptr_t increment);` puo' incrementare lo heap
     - `start_stack`
 
-### Allocazione in Windows
+### Allocazione in Windows (multiple heaps)
 - `malloc()` usa il *global heap*
-- *Local heaps*
+- *Local heaps* management
     - `HANDLE HeapCreate()`
     - `void* HeapAlloc(HANDLE heap, DWORD options, SIZE_T s )`
     - `BOOL HeapFree(Handle heap, DWORD options, void* ptr)`
@@ -2427,6 +2427,16 @@ Hello, world!
 - Due parametri espliciti
     1. `System.Object source`: mittente dell'evento
     1. `System.EventArgs`: event details
+- [Difference with respect to `delegate`s](https://stackoverflow.com/a/29170/3927431)
+    > An Event declaration adds a layer of abstraction and protection on the delegate instance. This protection prevents clients of the delegate from resetting the delegate and its invocation list and only allows adding or removing targets from the invocation list.
+- [Comparison chart](https://techdifferences.com/difference-between-delegates-and-events-in-c-sharp.html)
+    | BASIS FOR COMPARISON | DELEGATES                                                 | EVENTS                                                              |
+    |----------------------|-----------------------------------------------------------|---------------------------------------------------------------------|
+    | Basic                | A delegate holds the reference of a method               | The event is an over-layered abstraction provided to the delegates |
+    | Syntax               | `delegate return_type delegate_name(parameter_list);`       | `event event_delegate event_name;`                                    |
+    | Declaration          | A delegate is declared outside any class                 | An event is declared inside a class                                |
+    | Invoke               | To invoke a method it has to be referred to the delegate | To invoke a method it has to be assigned to the event              |
+    | Dependency           | Delegates are independent of events                      | The event can not be created without delegates                     |
 - Esempio
     ```cs
     public delegate void Handler(object sender, EventArgs e);
