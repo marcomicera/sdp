@@ -1,3 +1,10 @@
+/*
+ * Scrivere un'applicazione Stack<T> che gestisca l'inserimento/prelievo di elementi <T> con
+ * un metodo "push(T elemento)" e "T pop()". Deve essere presente un metodo "int grandezza()" che restituisca
+ * il numero di elementi inseriti. Nel caso lo stack sia pieno, il thread di inserimento si deve bloccare,
+ * così come si deve bloccare il thread di prelievo se lo stack è vuoto.
+ */
+
 #include <mutex>
 #include <condition_variable>
 

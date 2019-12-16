@@ -1,3 +1,10 @@
+/*
+ * Un'applicazione Win32 presenta più thread che devono operare in modo concorrente su uno stack di stringhe unicode.
+ * Si implementi una classe C++ che incapsuli il comportamento di tale stack in modalità thread-safe.
+ * Deve essere permesso l'inserimento di nuove stringhe nello stack e l'estrazione dell'ultima stringa inserita
+ * (notificando il caso di stack vuoto). Porre particolare attenzione alla gestione della memoria e della concorrenza.
+ */
+
 #pragma once
 
 #include <string>
