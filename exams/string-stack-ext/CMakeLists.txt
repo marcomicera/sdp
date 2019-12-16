@@ -1,5 +1,0 @@
-cmake_minimum_required(VERSION 3.9)
-project(string-stack-ext)
-set(CMAKE_CXX_STANDARD 11)
-add_executable(${PROJECT_NAME} stack.cpp main.cpp)
-SET(CMAKE_CXX_FLAGS -pthread)
