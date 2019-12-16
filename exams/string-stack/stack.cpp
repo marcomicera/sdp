@@ -5,8 +5,6 @@
  * (notificando il caso di stack vuoto). Porre particolare attenzione alla gestione della memoria e della concorrenza.
  */
 
-#pragma once
-
 #include <string>
 #include <mutex>
 #include <condition_variable>
