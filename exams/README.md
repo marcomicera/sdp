@@ -61,6 +61,17 @@ There are a lot of smarter ways to do these things (e.g., the `std::rand()` is d
     }
     ```
 
+### `std::queue`
+- Insertion
+    ```cpp
+    my_queue.push(item);
+    ```
+- Popping
+    ```cpp
+    int item = my_queue.front();
+    my_queue.pop();
+    ```
+
 ## Threading
 Useful when creating dummy main programs for testing purposes.
 
