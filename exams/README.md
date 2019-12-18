@@ -68,8 +68,29 @@ There are a lot of smarter ways to do these things (e.g., the `std::rand()` is d
     ```
 - Popping
     ```cpp
-    int item = my_queue.front();
+    T item = my_queue.front();
     my_queue.pop();
+    ```
+
+### `std::priority_queue`
+- Declaration
+    ```cpp
+    using namespace std;
+    
+    template <class T>
+    class PriorityQueueWrapper {
+        struct Compare {
+            bool operator() (const T& value1, const T& value2) {
+                return (value1 >= value2); // ascending order
+            }
+        };
+        priority_queue<T, vector<T>, Compare> my_prioqueue;
+    };
+    ```
+- Popping
+    ```cpp
+    T item = my_prioqueue.top();
+    my_prioqueue.pop();
     ```
 
 ## Threading
