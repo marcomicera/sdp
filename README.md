@@ -874,8 +874,8 @@ Base2* b2;
 - In C++, i templates sono **compilati** in due fasi:
     1. Coerenza ai vincoli
     2. Istanziazione dei template: generazione del codice a seconda degli utilizzi
-- I templates quindi **sono completamente risolti in fase di compilazione**
-- Applicabile a funzioni o a classi
+        - I templates quindi **sono completamente risolti in fase di compilazione**
+- Applicabile a **funzioni o a classi**
 
 ### Generic functions
 - Example
