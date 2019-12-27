@@ -42,6 +42,7 @@ Course held by Prof. Malnati
     + [Movimento](#movimento)
         * [Costruttore di movimento](#costruttore-di-movimento)
         * [Assegnazione per movimento](#assegnazione-per-movimento)
+    + [Confronto signatures](#confronto-signatures)
     + [Paradigma *Copy&Swap*](#paradigma-copyswap)
       - [Why does it work?](#why-does-it-work)
     + [`std::move()`](#stdmove)
@@ -49,6 +50,7 @@ Course held by Prof. Malnati
     + [Simple example](#simple-example)
       - [Ereditarieta' multipla](#ereditarieta-multipla)
     + [Polimorfismo](#polimorfismo)
+      - [V-Table](#v-table)
     + [Type casting](#type-casting)
         * [Example for this chapter](#example-for-this-chapter)
       - [`static_cast<T>`](#static_castt)
@@ -520,6 +522,26 @@ public:
 };
 ```
 
+### Confronto signatures
+- Costruttore di copia
+    ```cpp
+    CBuffer(const CBuffer& source)
+    ```
+- Operatore di assegnazione
+    ```cpp
+    CBuffer& operator=(const CBuffer& source)
+    ```
+- Costruttore di movimento
+    ```cpp
+    CBuffer(CBuffer&& source)
+    ```
+- Assegnazione per movimento
+    ```cpp
+    CBuffer& operator=(CBuffer&& source)
+    ```
+
+
+
 ### Paradigma *Copy&Swap*
 Per evitare errori dovuti alla dimenticanza di `this->prt = NULL;`
 ```cpp
@@ -575,7 +597,7 @@ intArray& operator=(const intArray& that) {
 2. > If you're going to make a copy of something in a function, let the compiler do it in the parameter list
 > Either way, this method of obtaining our resource is the key to eliminating code duplication: we get to use the code from the copy-constructor to make the copy, and never need to repeat any bit of it.
 
-> Observe that upon entering the function that all the new data is already allocated, copied, and ready to be used. This is what gives us a strong exception guarantee for free: we won't even enter the function if construction of the copy fails, and it's therefore not possible to alter the state of `*this`.
+> Observe that upon entering the function that all the new data is already allocated, copied, and ready to be used. This is what gives us a strong exception guarantee for free: **we won't even enter the function if construction of the copy fails**, and it's therefore not possible to alter the state of `*this`.
 
 > At this point we are home-free, because `swap` is non-throwing. We swap our current data (`this`) with the copied data (`that`), safely altering our state, and the old data gets put into the temporary. The old data is then released when the function returns. (Where upon the parameter's scope ends and its destructor is called.)
 
@@ -614,7 +636,7 @@ public:
 `TextFile` puo' chiamare `File::read()`.
 
 #### Ereditarieta' multipla
-- E' possibile
+- E' consentita
 - Per questo non esiste la `super` keyword
     - La sub-class deve utilizzare lo scope-operator
         ```cpp
@@ -663,16 +685,21 @@ public:
     ```
 - Distruttori virtuali
     - Se una classe ha una funzione `virtual`, dovrebbe avere anche il distruttore `virtual`, altrimenti potrebbe essere chiamato un distruttore sbagliato
-- Per far si' che il compiler distingua quale implementazione usare quando viene invocato un metodo poliformico (overridden), le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta ad una **V-Table** che ha tante entry quanti sono i metodi `virtual` nella classe stessa
-    - Le entry nella V-Table contengono gli indirizzi delle implementazioni concrete dei metodi polimorfici
-    - La V-Table e' statica, costruita a compile-time, condivisa da tutte le istanze concrete della stessa classe
-    - Ereditarieta'
-        - Ereditarieta' semplice: una V-Table, prima le entry della super-class, poi quelle della classe stessa
-        - Erediterieta' multipla: tante V-Table quante sono le super-classi piu' una per la classe stessa
+
+#### V-Table
+Per far si' che il compiler distingua quale implementazione usare quando viene invocato un metodo poliformico (overridden), le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta ad una **V-Table** che ha tante entry quanti sono i metodi `virtual` nella classe stessa.
+
+- Le sue entries contengono gli indirizzi delle implementazioni concrete dei metodi polimorfici
+- Costruita a compile-time
+    - Statica
+    - Condivisa da tutte le istanze concrete della stessa classe
+- Ereditarieta'
+    - Ereditarieta' semplice: una V-Table, prima le entry della super-class, poi quelle della classe stessa
+    - Erediterieta' multipla: tante V-Table quante sono le super-classi piu' una per la classe stessa
 
 ### Type casting
 
-##### Example for this chapter
+##### Example for this section
 ```cpp
 class Base1;
 class Base2;
@@ -689,25 +716,26 @@ Base2* b2;
     b1 = static_cast<Base1*>(d);
     b2 = static_cast<Base2*>(d);
     ```
-- Il compiler deve avere delle regole di conversione tra i tipi.
-    - Importatore:
-        ```cpp
-        /* not explicit */ Base1(Derivata d) { /* ... */ }
-        ```
-        - `explicit` avverte il compiler di non utilizzare la funzione per effettuare `static_cast<T>`
-    - Esportatore:
-        ```cpp
-        Base1 Derivata::operator_cast() { /* ... */ } // FIXME
-        ```
 - Done at compile time
     - No guarantee it actually makes sense
     - Efficient
 - Viene cambiata il puntatore alla V-Table
     - Durante un downcast, la dimensione della V-Table diminuisce (il valore del puntatore aumenta)
 - L'upcasting e' sempre garantito, il downcasting no
+- Usato per conversioni lungo l'asse ereditario
+- Il compiler deve avere delle regole di conversione tra i tipi.
+    - Importatore:
+        ```cpp
+        /* not explicit */ Base1(Derivata d) { /* ... */ }
+        ```y nella V-Table
+        - `explicit` avverte il compiler di non utilizzare la funzione per effettuare `static_cast<T>`
+    - Esportatore:
+        ```cpp
+        Base1 Derivata::operator_cast() { /* ... */ } // FIXME
+        ```
 
 #### `dynamic_cast<T>`
-- RTTI: Run-Time Type Identification
+- RTTI: Run-Time Type Information
     - Ogni oggetto ha un hash per il compatibility check
 - Downcasting sicuro, perche' se non e' possibile ritorna:
     - `0` su puntatore invalido
