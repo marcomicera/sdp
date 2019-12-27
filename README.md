@@ -824,10 +824,12 @@ Base2* b2;
     ```
 
 ### Lambda functions
-- Syntax
-    ```cpp
-    [<captured_vars>](<params>) -> <return_type> { <function_body> }
+- [Syntax](https://en.cppreference.com/w/cpp/language/lambda)
     ```
+    [ captures ] ( params ) [ mutable ] [ exception ] [-> ret] { body }
+    ```
+    - `mutable`
+        > Allows `body` to modify the `params` captured by copy, and to call their non-const member functions
 - Usato nella libreria standard: lambda function
     ```cpp
     int main() {
@@ -1026,6 +1028,7 @@ Base2* b2;
             - `counter`, contatore dei riferimenti
             - `weakCnt`
             - `objectPtr`, per distruttore
+    - Non supporta dipendenze cicliche
     - E' possibile specificare un distruttore (altrimenti usa `delete`)
     - `get()` restituisce una copia del puntatore nativo
         - Per backward-compatibility
@@ -1061,6 +1064,7 @@ Base2* b2;
         ```
 - `std::unique_ptr<BaseType>`
     - Non copiabile, ne' assegnabile
+        - Nessuna struttura di controllo dei conteggi
     - Movibile per
         - Costruzione
         - Operatori di movimento
