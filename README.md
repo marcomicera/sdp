@@ -4,6 +4,7 @@ Course held by Prof. Malnati
 #### Useful links
 - [OneNote notes](https://1drv.ms/u/s!AkzjmTTkND1lhPVBx3kR1-NqPIPxTw)
 - [O.S. books](http://www.os-book.com/)
+- [Summary](summary)
 
 # Table of contents
 1. [Piattaforme di esecuzione](#1-piattaforme-di-esecuzione)
