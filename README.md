@@ -224,7 +224,7 @@ Windows and macOS are fully POSIX compliant, Windows and Android only partially.
 - `SYSENTER`/`SYSEXIT`, on modern processors
 
 #### Creazione di un processo
-- Creazione dello **spazio di indizzamento**
+1. Creazione dello **spazio di indizzamento**
     - Insieme di locazioni di memoria accessibili tramite indirizzo virtuale
     - La MMU traduce da virtuale a fisico (e lancia page faults)
     - Nuova entry nella `GDT` (Global Descriptor Table)
@@ -232,11 +232,19 @@ Windows and macOS are fully POSIX compliant, Windows and Android only partially.
         - Formato ELF su Linux e PE2 su Windows
         - Caricato dal loader
     - All'inizio è vuoto, e ci saranno page faults
-- Caricamento dell'eseguibile in memoria
-- Caricamento delle librerie
+1. Caricamento dell'eseguibile in memoria
+1. Caricamento delle librerie
     - DLLs (la shared già presenti non vengono ricaricate)
-- Avvio dell'esecuzione
-    - `main(int argc, char** argv)` fino a `exit()`
+1. Avvio dell'esecuzione
+    1. Inizializzazione:
+        - Stack
+        - Registri
+        - Exception data structures
+    1. Costruttori degli oggetti globali
+    1. `main(int argc, char** argv)`
+    1. `exit()`, che rilascia:
+        - Spazio di indirizzamento
+        - Tutte le risorse allocate
 
 ##### GCC/Linux start function
 ```c
@@ -259,8 +267,8 @@ Funziona allo stesso modo. Ne esistono 4:
 |--------------|---------|---------|
 | `main()`     | no      | console |
 | `wmain()`    | yes     | console |
-| `WinMain()`  | no      | gui     |
-| `wWinMain()` | yes     | gui     |
+| `WinMain()`  | no      | GUI     |
+| `wWinMain()` | yes     | GUI     |
 
 #### Compiling with `-nostdlib`
 Take a look at the [example](nostdlib-example) ([guide](https://blogs.oracle.com/linux/hello-from-a-libc-free-world-part-1-v2)).
