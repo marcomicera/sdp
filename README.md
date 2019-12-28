@@ -27,7 +27,7 @@ Course held by Prof. Malnati
 3. [Allocazione della memoria](#3-allocazione-della-memoria)
     + [MMU flags](#mmu-flags)
         * [Accesso a locazioni non mappate](#accesso-a-locazioni-non-mappate)
-    + [Ciclo di vita delle variabili](#ciclo-di-vita-delle-variabili)
+    + [Tipi di variabili](#tipi-di-variabili)
     + [Spazio di indirizzamento](#spazio-di-indirizzamento)
     + [Allocazione statica e dinamica](#allocazione-statica-e-dinamica)
     + [Puntatori e il loro utilizzo](#puntatori-e-il-loro-utilizzo)
@@ -167,7 +167,7 @@ Course held by Prof. Malnati
         - Inspector
 
 ### Convenzioni
-- Strutture dati che descrivono lo sttao del sistema
+- Strutture dati che descrivono lo stato del sistema
 - Accessibili tramite le API attraverso riferimenti opachi
     - `HANDLE` in Windows
     - File descriptors in Linux
@@ -215,7 +215,7 @@ Non-ASCII as `UTF-8`
 
 ### POSIX
 *Portable Operating System Interface*, low-level API standard and set of shell commands.
-Windows and macOS are fully POSIX compliant, Windows and Android only partially.
+macOS is fully POSIX compliant, while Linux, Windows, and Android only partially.
 
 # 2. Il modello di esecuzione
 
@@ -224,7 +224,7 @@ Windows and macOS are fully POSIX compliant, Windows and Android only partially.
 - `SYSENTER`/`SYSEXIT`, on modern processors
 
 #### Creazione di un processo
-1. Creazione dello **spazio di indizzamento**
+1. Creazione dello [**spazio di indizzamento**](#spazio-di-indirizzamento)
     - Insieme di locazioni di memoria accessibili tramite indirizzo virtuale
     - La MMU traduce da virtuale a fisico (e lancia page faults)
     - Nuova entry nella `GDT` (Global Descriptor Table)
@@ -285,41 +285,39 @@ La MMU ha, per ogni pagina, un bit di:
     - The copy operation is hence deferred to the first write. It's done with an interrupt
     - Utilizzato dalla `fork()` quando viene creato lo spazio di indirizzamento del child process
 
-##### Ciclo di vita delle variabili 
-- Globali: prima dell'esecuzione del programma 
-- Locali: alla chiamata di una funzione 
-- Dinamiche (heap): da malloc() a free() 
+##### Tipi di variabili 
+- Globali
+    - Lifecycle: prima dell'esecuzione del programma
+    - Indirizzo fisso e assoluto determinato dal compilatore e linker
+        - Perche' devono essere sempre accessibili
+    - Inizializzate o non
+- Locali
+    - Lifecycle: blocco
+    - Indirizzo relativo all'inizio dello stack
+        - Valore iniziale casuale
+- Dinamiche (heap)
+    - Lifecycle: da `malloc()` a `free()`
     - Ciclo di vita indipendente
+    - Accessibili solo tramite puntatori
+    - Inizializzate o non
 
 ### Spazio di indirizzamento
 - Diverse aree per garantire diversi tipi di accesso (R/W/X)
 - Accesso a locazioni non mappate
-    - Segmentation fault on Linux
-    - Access violation on Windows
+    - _Segmentation fault_ on Linux
+    - _Access violation_ on Windows
 - Aree
-    - Area protetta (ad uso dell'O.S.)
+    - OS kernel space
     - Variabili d'ambiente
     - Codice eseguibile (R/X)
     - Stack (R/W)
         - Variabili locali
-            - Ciclo di vita della funzione/blocco
-            - Indirizzo relativo all'inizio dello stack
-            - Valore iniziale casuale
         - Valori di ritorno
         - Parametri
     - Costanti (R)
     - Variabili globali (R/W)
-        - Indirizzo fisso e assoluto determinato dal compilatore e linker
-            - Perche' devono essere sempre accessibili
-        - Inizializzate o non
     - Heap (variabili dinamiche)
-        - `malloc()` e `free()`, ciclo di vita indipendente
-        - Variabili dinamiche accessibili soo tramite puntatori
-        - Inizializzate o no
 - Lo starting point nello spazio virtuale e' random, cosi' da rendere la vita difficile ai virus
-- [Page file](https://www.howtogeek.com/126430/htg-explains-what-is-the-windows-page-file-and-should-you-disable-it/)
-    - When your RAM becomes full, Windows moves some of the data from your RAM back to your hard drive, placing it in the page file
-    - This file is a form of virtual memory
 
 ### Allocazione statica e dinamica
 - Linux
@@ -328,6 +326,14 @@ La MMU ha, per ogni pagina, un bit di:
     - `void* realloc(void* p, size_t s)`, estende/riduce `p` con la nuova dimensione `s`
 - Windows
     - *Global heap* e *local heap*
+- Diverse aree per garantire diversi tipi di accesso (R/W/X)
+- Accesso a locazioni non mappate
+    - _Segmentation fault_ on Linux
+    - _Access violation_ on Windows
+- Lo starting point nello spazio virtuale e' random, cosi' da rendere la vita difficile ai virus
+- [Page file](https://www.howtogeek.com/126430/htg-explains-what-is-the-windows-page-file-and-should-you-disable-it/)
+    - > When your RAM becomes full, Windows moves some of the data from your RAM back to your hard drive, placing it in the page file
+    - > This file is a form of virtual memory
 - C++
     - Costruttore `new`/`delete`, che inizializza sempre
     - `new[]`/`delete[]` per array
@@ -360,7 +366,7 @@ La MMU ha, per ogni pagina, un bit di:
 ### Allocazione in Linux
 - `malloc()` effettua una syscall dell'O.S., i cui dettagli dipendono dall'implementazione
     - `malloc()` per dati > 128KB chiama la `mmap()` che crea un blocco separato in un segmento inutilizzato
-- Ogni PCB (*Process Control Block*) contiene una `mm_struct`(*memory descriptor*), che contiene
+- Ogni PCB (*Process Control Block*) contiene una `mm_struct` (*memory descriptor*), che contiene
     - `start_brk`/`brk`: inizio/fine heap
         - `int brk(void* end_data_segment);` sposta il puntatore di fine heap
         - `void* sbrk(intptr_t increment);` puo' incrementare lo heap
@@ -548,8 +554,6 @@ public:
     CBuffer& operator=(CBuffer&& source)
     ```
 
-
-
 ### Paradigma *Copy&Swap*
 Per evitare errori dovuti alla dimenticanza di `this->prt = NULL;`
 ```cpp
@@ -675,7 +679,7 @@ public:
     public:
         int m() { return 1; }
         virtual int mv() { return 1; } // solo le `virtual` sono polimorfiche
-        virtual int ma() = 0; // classe non implementabile (polimorfico puro)
+        virtual int ma() = 0; // classe non implementabile (polimorfico puro o virtuale astratto)
     }
 
     class TextFile : public File {
@@ -1123,7 +1127,7 @@ Base2* b2;
 
 # 11. Librerie
 - L'uso di una libreria richiede due fasi
-    - Identificazione dei moduli necessasri e loro caricamento in memoria
+    - Identificazione dei moduli necessari e loro caricamento in memoria
     - Aggiornamento degli indirizzi per puntare correttamente ai moduli caricati
 - Librerie gestite da:
     - Linker (librerie statiche)
