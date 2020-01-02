@@ -62,10 +62,10 @@ R, W, X, [COW](https://en.wikipedia.org/wiki/Copy-on-write)
 ##### Tipi di variabili 
 - Globali
     - Lifecycle: prima dell'esecuzione del programma
-    - Indirizzo fisso
+    - **Indirizzo fisso e assoluto**
 - Locali
     - Lifecycle: blocco
-    - Indirizzo relativo all'inizio dello stack
+    - **Indirizzo relativo** all'inizio dello stack
 - Dinamiche (heap)
     - Lifecycle: da `malloc()` a `free()`
 

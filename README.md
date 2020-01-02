@@ -289,12 +289,12 @@ La MMU ha, per ogni pagina, un bit di:
 ##### Tipi di variabili 
 - Globali
     - Lifecycle: prima dell'esecuzione del programma
-    - Indirizzo fisso e assoluto determinato dal compilatore e linker
+    - **Indirizzo fisso e assoluto** determinato dal compilatore e linker
         - Perche' devono essere sempre accessibili
     - Inizializzate o non
 - Locali
     - Lifecycle: blocco
-    - Indirizzo relativo all'inizio dello stack
+    - **Indirizzo relativo** all'inizio dello stack
         - Valore iniziale casuale
 - Dinamiche (heap)
     - Lifecycle: da `malloc()` a `free()`
