@@ -207,6 +207,54 @@ public:
 
 # 7. Ereditarietà e polimorfismo
 
+### Metodi virtuali e virtuali astratti
+```cpp
+    class File {
+    public:
+        virtual int v() { return 1; }
+        virtual int va() = 0; // virtual astratto
+    }
+```
+
+#### V-Table
+Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta ad una **V-Table** che ha tante entry quanti sono i metodi `virtual` nella classe stessa.
+
+- Le sue entries contengono gli indirizzi delle implementazioni concrete dei metodi polimorfici
+- Costruita a compile-time
+    - Statica
+    - Condivisa da tutte le istanze concrete della stessa classe
+- Ereditarieta'
+    - Ereditarieta' semplice: una V-Table, prima le entry della super-class, poi quelle della classe stessa
+    - Erediterieta' multipla: tante V-Table quante sono le super-classi piu' una per la classe stessa
+
+### Type casting
+
+#### `static_cast<T>`
+- Done at compile time
+    - Efficient
+- Viene cambiata il puntatore alla V-Table
+- Usato per conversioni lungo l'asse ereditario
+    - Upcasting sempre garantito, il downcasting no
+- Il compiler deve avere delle regole di conversione tra i tipi
+    - Importatore:
+    - Esportatore:
+
+#### `dynamic_cast<T>`
+- RTTI: Run-Time Type Information
+    - Ogni oggetto ha un hash per il compatibility check
+- Downcasting sicuro, perche' se non e' possibile ritorna:
+    - `0` su puntatore invalido
+    - Runtime exception su riferimento incompatibile
+
+#### `reinterpret_cast<T>`
+- Il cast del C
+- Interpreta la sequenza di bit come un altro tipo
+    - Nessun check
+- Adatto al low level programming
+
+#### `const_cast<T>`
+- Rimuove il descrittore `const` da una variabile
+
 # 8. Funzioni e operatori
 
 # 9. Programmazione generica
