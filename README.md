@@ -905,7 +905,7 @@ Base2* b2;
         max<double>(2, 3.14);
         ```
 
-### Generic classes (templates)
+### Generic classes
 - Example
     ```cpp
     template <class T>
