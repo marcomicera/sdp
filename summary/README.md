@@ -418,6 +418,17 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 12. Programmazione concorrente
 
+### Thread e memoria
+- I thread condividono:
+    - Spazio di indirizzamento (variabili globali)
+    - Codice
+    - Costanti
+    - Heap
+- Ogni thread ha:
+    - Stack delle chiamate (variabili locali)
+    - Puntatore all'ultimo contesto per la gestione delle eccezioni
+    - Lo stato del proprio processore virtuale
+
 # 13. Programmazione concorrente in C++
 
 # 14. Threads
