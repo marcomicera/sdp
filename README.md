@@ -1376,68 +1376,68 @@ C++ standardizza il concetto di thread in `std::thread`
     - `std::unique_lock<Lockable>`
 - Altri tipi
     - `std::recursive_mutex` e' ricorsivo (`lock()` piu' volte) ma occorre chiamare `unlock()` tante volte quanto e' stato chiamato il `lock()` (si comporta quindi come un semaforo)
-    - `std::timed_mutex` aggiunge i metodi `try_lock_for()` e `try_lock_until()`
+        - `std::timed_mutex` aggiunge i metodi `try_lock_for()` e `try_lock_until()`
+            - Esempio
+                ```cpp
+                #include <mutex>
+
+                std::mutex m;
+
+                void someFunction() {
+                    while (m.try_lock() == false) {
+                        do_some_work();
+                    }
+
+                    // Il lock e' gia' stato acquisito da `try_lock`, quindi
+                    // `l` registra `m` al suo interno, senza acquisirlo una
+                    // seconda volta
+                    std::lock_guard<std::mutex> l(m, std::adopt_lock);
+                    
+                    // ...
+                    
+                    // quando l viene distrutto, rilascia il possesso del mutex
+                }
+                ```
+        - `std::recursive_timed_mutex`
+    - `std::lock_guard<Lockable>` per il paradigma RAII
+        - `lock()` nel suo costruttore e `unlock()` nel suo distruttore
         - Esempio
             ```cpp
-            #include <mutex>
+            template <class T>
+            class shared_list {
+                std::list<T> list;
+                std::mutex m; // il `lock_guard` lavora su un mutex
+            
+                T& operator=(const shared_list<T>& that);
+                shared_list(const shared_list<T>& that);
 
-            std::mutex m;
-
-            void someFunction() {
-                while (m.try_lock() == false) {
-                    do_some_work();
+            public:
+            
+                int size() {
+                    std::lock_guard<std::mutex> l(m);
+                    return list.size();
+                    // il distruttore di `lock_guard` rilascia il lock
                 }
 
-                // Il lock e' gia' stato acquisito da `try_lock`, quindi
-                // `l` registra `m` al suo interno, senza acquisirlo una
-                // seconda volta
-                std::lock_guard<std::mutex> l(m, std::adopt_lock);
-                
-                // ...
-                
-                // quando l viene distrutto, rilascia il possesso del mutex
-            }
+                T front() {
+                    std::lock_guard<std::mutex> l(m);
+                    return list.front();    // se lancia un'eccezione,
+                                            // stack-unwinding chiama
+                                            // il distrutore di `lock_guard`
+                }
+            
+                void push_front(T t) {
+                    std::lock_guard<std::mutex> l(m);
+                    list.push_front(t);
+                }
+            };
             ```
-    - `std::recursive_timed_mutex`
-    - `std::lock_guard<Lockable>` per il paradigma RAII
-    - `lock()` nel suo costruttore e `unlock()` nel suo distruttore
-    - Esempio
-        ```cpp
-        template <class T>
-        class shared_list {
-            std::list<T> list;
-            std::mutex m; // il `lock_guard` lavora su un mutex
-        
-            T& operator=(const shared_list<T>& that);
-            shared_list(const shared_list<T>& that);
-
-        public:
-        
-            int size() {
-                std::lock_guard<std::mutex> l(m);
-                return list.size();
-                // il distruttore di `lock_guard` rilascia il lock
-            }
-
-            T front() {
-                std::lock_guard<std::mutex> l(m);
-                return list.front();    // se lancia un'eccezione,
-                                        // stack-unwinding chiama
-                                        // il distrutore di `lock_guard`
-            }
-        
-            void push_front(T t) {
-                std::lock_guard<std::mutex> l(m);
-                list.push_front(t);
-            }
-        };
-        ```
-- `std::unique_lock<Lockable>` estende `lock_guard`
-    - Consente di rilasciare e riacquisire l'oggetto `Lockable` tramite `unlock()` e `lock()` (in questo ordine)
-        - Possono lanciare `std::system_error`
-    - Il costruttore ha piu' politiche di gestione
-        - `adopt_lock` verifica che il thread possieda gia' il `Lockable` passato come parametro e lo adotta
-        - `defer_lock` si limita a registrare il riferimento al `Lockable`, senza cercare di acquisirlo
+        - `std::unique_lock<Lockable>` estende `lock_guard`
+            - Consente di rilasciare e riacquisire l'oggetto `Lockable` tramite `unlock()` e `lock()` (in questo ordine)
+                - Possono lanciare `std::system_error`
+            - Il costruttore ha piu' politiche di gestione
+                - `adopt_lock` verifica che il thread possieda gia' il `Lockable` passato come parametro e lo adotta
+                - `defer_lock` si limita a registrare il riferimento al `Lockable`, senza cercare di acquisirlo
 - Costa poco in caso di `std::mutex` libero, ma causa il blocco di altri thread, che possono essere schedulati anche molto dopo rispetto al rilascio del `std::mutex`
 
 ### `std::atomic<T>`

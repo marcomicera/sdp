@@ -431,6 +431,31 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 13. Programmazione concorrente in C++
 
+### Esecuzione asincrona
+- Funzione `std::async()`
+- Funzione eseguita in un altro thread
+- `std::launch::async` attiva sempre un thread secondario
+    - `std::async` puo' non creare un thread se ci sono poche risorse
+    - Pericoloso perche' lo stack viene copiato per ogni thread
+
+### `std::mutex`
+- `lock()` e `unlock()`
+- Altri tipi
+    - `std::recursive_mutex` e' ricorsivo (`lock()` piu' volte) ma occorre chiamare `unlock()` tante volte quanto e' stato chiamato il `lock()` (si comporta quindi come un semaforo)
+        - `std::timed_mutex` aggiunge i metodi `try_lock_for()` e `try_lock_until()`
+        - `std::recursive_timed_mutex`
+    - `std::lock_guard<Lockable>` per il paradigma RAII
+        - `std::unique_lock<Lockable>` estende `lock_guard`
+            - Consente di rilasciare e riacquisire l'oggetto `Lockable` tramite `unlock()` e `lock()` (in questo ordine)
+            - Il costruttore ha piu' politiche di gestione
+                - `adopt_lock` verifica che il thread possieda gia' il `Lockable` passato come parametro e lo adotta
+                - `defer_lock` si limita a registrare il riferimento al `Lockable`, senza cercare di acquisirlo
+
+### `std::atomic<T>`
+- Accesso in modo atomico a `T`
+    - Internamente implementato con uno spinlock
+- Migliore del `std::mutex` per dati elementari
+
 # 14. Threads
 
 # 15. Condition variables
