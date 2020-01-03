@@ -1541,12 +1541,12 @@ C++ standardizza il concetto di thread in `std::thread`
     - Inizializzato a `-2`, `STILL_ACTIVE`
 1. Il thread va in esecuzione
     - Successo: viene eseguita `ExitThread()`
-        - Rimuove il thread dallo scheduler settando `Signaled = FALSE` del *Thread Kernel Object*
-        - Il thread non raggiungera' mai `return`, non potra' quindi causare uno stack underflow
-        - Dealloca lo stack del thread
+        1. Rimuove il thread dallo scheduler settando `Signaled = FALSE` del *Thread Kernel Object*
+        1. Il thread non raggiungera' mai `return`, non potra' quindi causare uno stack underflow
+        1. Dealloca lo stack del thread
     - Fallimento: viene eseguita `ExitProcess()`
-        - `std::terminate` in Linux
-        - Termina l'intero processo
+        1. `std::terminate` in Linux
+        1. Termina l'intero processo
 
 #### Come terminare un thread
 - Movimento ad un altro oggetto
@@ -1572,8 +1572,8 @@ public:
         if (t.joinable()) t.join(); // prevents exception!
     }
 
-    thread_guard(thread_guard const& )=delete;
-    thread_guard& operator=(thread_guard const&)=delete;
+    thread_guard(thread_guard const& ) = delete;
+    thread_guard& operator=(thread_guard const&) = delete;
 };
 ```
 

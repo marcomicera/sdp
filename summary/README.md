@@ -458,6 +458,39 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 14. Threads
 
+### Creazione di thread secondari
+- `std::thread`
+- Inizia subito ad eseguire
+- Differenza tra `std::thread` e `std::async`
+    - `std::async` puo' essere attivato in modalita' lazy, con `std::thread` no
+    - `std::thread` alloca uno stack (di solito 1MB)
+    - Non c'e' un meccanismo per [accedere al risultato](#restituzione-dei-risultati)
+        - `std::thread` puo' [lanciare un'eccezione](#cosa-succede-quando-un-thread-fallisce)
+
+### Restituzione dei risultati
+
+#### Cosa succede quando un thread fallisce
+1. Direttiva `CreateThread`, che ha come parametri `stackSize`
+1. Lo stack viene allocato, default 1MB
+1. Viene creato un *Thread Kernel Object*, cosi' che lo scheduler possa utilizzarlo
+1. L'exit code del thread e' nel *Thread Kernel Object*
+1. Il thread va in esecuzione
+    - Successo: viene eseguita `ExitThread()`
+    - Fallimento: viene eseguita `ExitProcess()`
+        1. `std::terminate` in Linux
+        1. Termina l'intero processo
+
+#### Come terminare un thread
+- Movimento ad un altro oggetto
+- Aspettare la sua terminazione con `join()`
+- `detach()` per renderlo un daemon thread
+
+#### Retrieve results while secondary thread is still running
+- Solution: `std::promise<T>`
+    - One `std::promise<T>` object for each intermediate results
+    - Un `std::promise<T>` ha associato un `std::future<T>`
+        - Il chiamante puo' quindi chiamare la `get_future().get()`
+
 # 15. Condition variables
 
 # 16. Interprocess communication on Windows
