@@ -297,6 +297,85 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     - Programmazione concorrente
 
 # 9. Programmazione generica
+- In C++, i templates sono **compilati** in due fasi:
+    1. Coerenza ai vincoli
+    2. Istanziazione dei template: generazione del codice a seconda degli utilizzi
+        - I templates quindi **sono completamente risolti in fase di compilazione**
+- Applicabile a **funzioni o a classi**
+
+### Generic functions
+- Example
+    ```cpp
+    template <class T>
+    const T& max(const T& t1, const T& t2) {
+        return (t1 < t2 ? t2 : t1);
+    }
+    ```
+    - `T` deve avere `operator+()`
+    - `T` deve aver un costruttore di copia, per derivare una variabile temporanea a partire da un dato costante
+    - Forzare la scelta
+        ```cpp
+        max<double>(2, 3.14);
+        ```
+- Anche con valori fissati
+    ```cpp
+    template <class T, int size> // valore costante, non una espressione
+    ```
+
+### Specializzare un template
+- Example
+    ```cpp
+    class Person { // incapsula una stringa
+        std::string name;
+    public:
+        Person(std::string n): name(n) {}
+        // Does not override operator+().
+        // How could we use the `Accum`(ulator) template
+        // with `Person`(s)?
+    };
+
+    // Template specializzato per la classe `Person`
+    template<> class Accum<Person> {
+        int total;
+    public:
+        Accum(int start = 0): total(start) {}
+        int operator+(const Person&) { return ++total; }
+    };
+    ```
+
+#### C++ Smart Pointers
+```cpp
+#include <memory>
+```
+- `std::shared_ptr<BaseType>`
+    - Conteggio dei riferimenti
+    - Copiabile e assegnabile
+    - Inizializzabile 
+        - `make_shared<BaseType>(params...)`
+        - Copia o assegnazione
+    - `NullPointerException` se inizializzato con `NULL`
+    - Due campi: 64 bit, accesso due volte
+        - Proprieta' condivisa `objectPtr`
+        - Blocco di controllo `counterPtr`
+            - `counter`, contatore dei riferimenti
+            - `weakCnt`
+            - `objectPtr`, per distruttore
+    - Non supporta dipendenze cicliche
+- `std::weak_ptr<BaseType>`
+    - Senza conteggio di riferimenti = cicli
+    - Si crea a partire da uno `shared_ptr`
+    - Si accede al dato promuovendolo temporaneamente ad uno `shared_ptr` tramite `lock()`
+        - Controllare la validita' con `expired()`
+    - Puntano solo al blocco di controllo
+        - Non partecipano al conteggio dei riferimenti
+- `std::unique_ptr<BaseType>`
+    - Non copiabile, ne' assegnabile
+        - Nessuna struttura di controllo dei conteggi
+    - Movibile
+    - Usi
+        - Garantire la distruzione di un oggetto
+        - Gestione sicura di oggetti polimorfici
+        - `std::make_unique<BaseType>()`
 
 # 10. Librerie C++
 
