@@ -11,7 +11,7 @@ Brief summary of the entire course program.
 7. [Ereditarietà e polimorfismo](#7-ereditarietà-e-polimorfismo)
 8. [Funzioni e operatori](#8-funzioni-e-operatori)
 9. [Programmazione generica](#9-programmazione-generica)
-10. [Librerie C++](#10-librerie-c)
+10. Librerie C++
 11. [Librerie](#11-librerie)
 12. [Programmazione concorrente](#12-programmazione-concorrente)
 13. [Programmazione concorrente in C++](#13-programmazione-concorrente-in-c)
@@ -380,6 +380,41 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 # 10. Librerie C++
 
 # 11. Librerie
+- L'uso di una libreria richiede due fasi
+    1. Identificazione dei moduli necessari e loro caricamento in memoria
+    1. Aggiornamento degli indirizzi per puntare correttamente ai moduli caricati
+- Librerie gestite da:
+    - Linker (librerie statiche)
+    - Loader (librerie collegate dinamicamente)
+    - Durante l'esecuzione dal programma stesso (librerie caricate dinamicamente)
+- Il loader carica dei `.dll` in modo ricorsivo
+
+
+### Tassonomia delle librerie
+- Librerie statiche (linker)
+- Librerie dinamiche
+    - Collegate dinamicamente (loader)
+    - Caricate dinamicamente (dal programma stesso)
+
+#### Librerie statiche
+- Stessi contenuti in processi differenti
+    - Pagine fisiche replicate
+- Ogni applicazione che fa uso di una libreria statica dev'essere ricompilata ad ogni modifica della libreria
+- Archivio, `lib*.a` in Linux e `.lib` in Windows
+    - Concatenazione di file `.o`
+    - L'*archiver* `ar` aggiunge file `.o` ad una libreria statica
+
+#### Librerie dinamiche
+- L'executable contiene info su dove recuperare le librerie
+- File `.so` in Linux (ELF) e `.dll` in Windows (PE2)
+- Condivisione di pagine fisiche
+    - Librerie mappate in spazi di indirizzamento lontani dall'executable
+- Linux dynamic linker: `ld.so`
+- Come si caricano in Linux
+    - `dlopen()` mappa un `.o` nello spazio di indirizzamento del programma
+    - `dlsym()` cerca l'indirizzo di un simbolo (variable o funzione) di un file `.o` aperto    
+- Come si caricano in Windows 
+    - `LoadLibrary()` mappa un DLL nello spazio di indirizzamento del programma
 
 # 12. Programmazione concorrente
 

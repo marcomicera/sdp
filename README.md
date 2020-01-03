@@ -1128,8 +1128,8 @@ Base2* b2;
 
 # 11. Librerie
 - L'uso di una libreria richiede due fasi
-    - Identificazione dei moduli necessari e loro caricamento in memoria
-    - Aggiornamento degli indirizzi per puntare correttamente ai moduli caricati
+    1. Identificazione dei moduli necessari e loro caricamento in memoria
+    1. Aggiornamento degli indirizzi per puntare correttamente ai moduli caricati
 - Librerie gestite da:
     - Linker (librerie statiche)
     - Loader (librerie collegate dinamicamente)
@@ -1144,6 +1144,9 @@ Base2* b2;
     - Caricate dinamicamente (dal programma stesso)
 
 #### Librerie statiche
+- Stessi contenuti in processi differenti
+    - Pagine fisiche replicate
+- Ogni applicazione che fa uso di una libreria statica dev'essere ricompilata ad ogni modifica della libreria
 - Archivio, `lib*.a` in Linux e `.lib` in Windows
     - Concatenazione di file `.o`
     - L'*archiver* `ar` aggiunge file `.o` ad una libreria statica
@@ -1152,9 +1155,6 @@ Base2* b2;
     - Vengono cercate nella current directory e in `LD_LIBRARY_PATH`
     - `gcc` usa `-lc`, `g++` usa `lcc
 - Flag `-L` al compiler per specificare directory contenenti librerie
-- Stessi contenuti in processi differenti
-    - Pagine fisiche replicate
-- Ogni applicazione che fa uso di una libreria statica dev'essere ricompilata ad ogni modifica della libreria
 
 #### Librerie dinamiche
 - L'executable contiene info su dove recuperare le librerie
