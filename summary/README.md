@@ -257,6 +257,45 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 8. Funzioni e operatori
 
+### Puntatori a funzione
+- Example
+    ```cpp
+    int (*var)(int, double);
+    var = f;
+    var = &f; // it's the same, more coherent
+    ```
+
+### Oggetti funzionali o *funtori*
+- Example
+    ```cpp
+    class FC {
+    public:
+        int operator()(int v) {
+            return v*2;
+        }
+    };
+
+    FC fc;
+    int i = fc(5);  // object behaving like a function
+                    // i = 10
+    ```
+
+### Lambda functions
+- Example
+    ```cpp
+    int main() {
+        std::vector<int> v;
+        // ...
+        std::for_each(v.begin(), v.end(), 
+            [](int i) -> void { std::cout << i << " "; }
+        );
+    }
+    ```
+- Usage
+    - Algoritmi generici
+    - Programmazione funzionale: programmazione in cui funzioni ritornano altre funzioni
+    - Programmazione concorrente
+
 # 9. Programmazione generica
 
 # 10. Librerie C++
