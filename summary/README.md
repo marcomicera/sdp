@@ -492,8 +492,45 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
         - Il chiamante puo' quindi chiamare la `get_future().get()`
 
 # 15. Condition variables
+- Richiede l'uso di un `std::unique_lock<Lockable>`
 
 # 16. Interprocess communication on Windows
+- I processi, al contrario dei thread, non condividono lo spazio di indirizzamento
+
+### Processi in Windows
+- `CreateProcess(...)`
+
+### Processi in Linux
+- `fork()`
+    - Lo spazio di indirizzamento viene duplicato in *CopyOnWrite*
+
+#### `fork()` e threads
+- Il processo figlio ha sempre un solo thread
+- I thread secondari del processo padre non si duplicano
+- Gli oggetti di sincronizzazione presenti nel padre possono trovarsi in stati incongruenti
+- Funzione da invocare prima di `fork()`
+    ```c
+    int pthread_atfork(
+        void (*prepare)(void),  /* invocata prima di `fork()`: e.g., liberazione
+                                   lock, o acquisizione di tutti i lock */
+        void (*parent)(void),   // solo dal padre, prima che `fork()` ritorni
+        void (*child)(void),    // solo dal figlio, prima che `fork()` ritorni
+    );
+    ```
+
+### IPC: InterProcess Communication
+- Scambio di dati
+- Comunicazione di eventi
+- Tipi di IPC
+    - Code FIFO di messaggi
+    - Pipe
+    - Memoria condivisa
+    - Files
+    - Sockets
+    - Signals (Linux only)
+- Gli oggetti kernel sono identificati:
+    - Tramite in numero in Linux
+    - Tramite una stringa in Windows
 
 # 17. Interprocess communication on Linux
 
