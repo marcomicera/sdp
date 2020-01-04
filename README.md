@@ -1,10 +1,12 @@
 # System calls, programming, embedded systems, etc.
-Course held by Prof. Malnati
+Course held by Prof. Malnati, summer 2018.
 
-#### Useful links
-- [OneNote notes](https://1drv.ms/u/s!AkzjmTTkND1lhPVBx3kR1-NqPIPxTw)
+## Useful links
+- [Exams](exams)
+    - [Tips & tricks](exams/README.md)
+- [Summary](summary/README.md)
+- [Slides](slides)
 - [O.S. books](http://www.os-book.com/)
-- [Summary](summary)
 
 # Table of contents
 1. [Piattaforme di esecuzione](#1-piattaforme-di-esecuzione)

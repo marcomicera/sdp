@@ -1,10 +1,11 @@
-# Tips and tricks
+# Tips & tricks
 
-Here are some tips and tricks useful for the written exam.
-Please note that the following tips keep the overall syntaxt as short
-as possible, hence these are not recommended for the every-day life.
-
-There are a lot of smarter ways to do these things (e.g., the `std::rand()` is discouraged online). 
+Here are some tips and tricks that might be useful for the written exam.
+Please note that the following tips keep the overall C++ syntax as short
+as possible since it is convenient for the exam, so please do not follow
+them for anything besides that.
+There are a lot of smarter alternatives for lots of these things
+(e.g., the use of `std::rand()` is pretty discouraged online).
 
 ## Locking
 - `unique_lock<mutex>` allows `lock()` and `unlock()`
