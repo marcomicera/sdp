@@ -2656,30 +2656,34 @@ Hello, world!
     ```cs
     public partial class MyWindow: Window {
 
-    public static readonly DependencyProperty SizeProperty =
-        DependencyProperty.Register("Size", 
-                    typeof(double), 
-                    typeof(MyWindow), 
-                    new UIPropertyMetadata(3));
+        public static readonly DependencyProperty SizeProperty =
+            DependencyProperty.Register("Size", 
+                        typeof(double), 
+                        typeof(MyWindow), 
+                        new UIPropertyMetadata(3));
 
-    public double Size {
-        get { return (double) GetValue(SizeProperty); }
-        set { SetValue(SizeProperty, value); }
-    }
+        public double Size {
+            get { return (double) GetValue(SizeProperty); }
+            set { SetValue(SizeProperty, value); }
+        }
 
-    //…
+        //…
     }
     ```
 - Registrarsi al cambiamento
     ```cs
-    DependencyPropertyDescriptor sizeDescr = DependencyPropertyDescriptor.FromProperty(
-    MyWindow.SizeProperty, typeof(MyWindow));
+    DependencyPropertyDescriptor sizeDescr = 
+        DependencyPropertyDescriptor.FromProperty(
+            MyWindow.SizeProperty, 
+            typeof(MyWindow)
+        );
 
     if (sizeDescr!= null) {
         sizeDescr.AddValueChanged(this, 
-        delegate {
-            // Add your propery changed logic here...
-        });
+            delegate {
+                // Add your propery changed logic here...
+            }
+        );
     }
     ```
 - Proprieta' aggiunte

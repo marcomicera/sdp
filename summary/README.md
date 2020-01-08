@@ -673,5 +673,53 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 19. WPF
 
+### WPF threads
+- Rendering thread
+- UI thread
+
+#### Dispatcher
+- Scambiatore di messaggi tra threads
+- Rendering thread e UI thread accedono alla coda del Dispatcher
+    - **Tutti** gli oggetti WPF hanno accesso al Dispatcher perche' derivano da `DispatcherObject`
+- `Invoke()`: sincrono, bloccante
+- `BeginInvoke()`: asincrono, non bloccante
+
+### `DependencyProperty`
+- Informazioni grafiche
+- Esempio
+    ```cs
+    public partial class MyWindow: Window {
+
+        public static readonly DependencyProperty SizeProperty =
+            DependencyProperty.Register("Size", 
+                        typeof(double), 
+                        typeof(MyWindow), 
+                        new UIPropertyMetadata(3));
+
+        public double Size {
+            get { return (double) GetValue(SizeProperty); }
+            set { SetValue(SizeProperty, value); }
+        }
+
+        //…
+    }
+    ```
+- Registrarsi al cambiamento
+    ```cs
+    DependencyPropertyDescriptor sizeDescr = 
+        DependencyPropertyDescriptor.FromProperty(
+            MyWindow.SizeProperty, 
+            typeof(MyWindow)
+        );
+
+    if (sizeDescr!= null) {
+        sizeDescr.AddValueChanged(this, 
+            delegate {
+                // Add your propery changed logic here...
+            }
+        );
+    }
+    ```
+
 # 20. Multithreading in .NET e C#
 
