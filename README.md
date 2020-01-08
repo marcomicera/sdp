@@ -2444,7 +2444,7 @@ Hello, world!
     class EditBox: Control, IDataBound {}
     ```
 
-### Callback e delegate
+### Callback e `delegate`
 - Instanze di tipo `delegate` hanno una lista di subscribers (watchers)
     - `+=` per aggiungersi alla lista, `-=` per levarsi, `=` per sovrascrivere la lista
 - Example
@@ -2454,7 +2454,12 @@ Hello, world!
         ```
     1. Instanziazione del tipo `delegate`
         ```cs
-        // Non appena qualcuno attiva `myHandler`, `obj.someMethod` viene invocato
+        /** `Handler` accetta una funzione come parametro.
+         *  La funzione accetta come parametro una `string` e restituisce `void`.
+         *
+         *  L'invocazione di `myHandler` causa l'invocazione di `obj.someMethod`
+         *  e di tutte le altre callback assegnate.
+         */
         Handler myHandler = new Handler(myObj.someMethod);
 
         // Aggiunge una callback
