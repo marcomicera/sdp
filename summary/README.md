@@ -723,3 +723,45 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 20. Multithreading in .NET e C#
 
+- In ogni `System.Threading.Thread` c'e' un thread nativo, ma **non** il contrario
+- Tipi
+    - Foreground
+    - Background: l'applicazione puo' terminare prima
+
+#### Thread exceptions
+Se un thread secondario fallisce, il thread principale **non** termina.
+
+### Sincronizzazione in .NET
+
+####  Monitor .NET
+```cs
+public sealed class Monitor {
+
+    private Monitor();
+
+    // `obj` e' l'oggetto su cui ci si sincronizza
+    // (di oggetti nello heap, altrimenti non ha senso)
+    // (`this` per bloccare l'intera classe)
+    public static void Enter(object obj); // in the critical zone
+    public static void Exit(object obj);
+
+    public static void Wait(object obj);
+    public static void Pulse(object obj);
+    public static void PulseAll(object obj);
+}
+```
+- Equivalente di `std::mutex` di Win32
+- Ha anche una condition variable
+- `Enter()` puo' lanciare eccezioni
+    ```cs
+    try {
+        Monitor.Enter(this);
+        // ...
+    } finally {
+        Monitor.Exit(this);
+    }
+    ```
+    - Syntactic sugar
+        ```cs
+        lock(object obj) { /* code */ }
+        ```

@@ -2697,7 +2697,7 @@ Hello, world!
 
 # 20. Multithreading in .NET e C#
 
-- Ogni `System.Threading.Thread` c'e' un thread nativo, ma **non** il contrario
+- In ogni `System.Threading.Thread` c'e' un thread nativo, ma **non** il contrario
 - Tipi
     - Foreground
     - Background: l'applicazione puo' terminare prima
