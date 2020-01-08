@@ -608,6 +608,69 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 18. C# introduction
 
+### Achitettura .NET
+- VM: CLR (*Common Language Runtime*)
+    - Esegue il *managed code*: codice utilizzato per la costruzione di applicazioni .NET
+    - CIL: *Common Intermediate Language*
+        1. Consente al programmatore di non conoscere l'architettura della macchina sottostante, e quindi della grandezza dei tipi
+        1. **I compiler su VM gestiscono tutto su stack** (_stack-based execution_) invece che nei registri (register-based execution), perche' non conoscono l'architettura fisica sottostante.
+            - Operare con lo stack e' molto meno efficiente rispetto ai registri della CPU
+        1. **Il JIT compiler puo' tradurre queste operazioni utilizzando i registri**
+
+### NGEN: Native image GENeration
+- Compilazione ahead of time
+    - In fase di installazione su una data piattaforma
+
+### Classi
+- Come in Java: ereditarieta' singola, estende multiple interfacce
+- Elementi delle classi
+    - Costanti (`const int`) (Java's `final`)
+    - Campi
+    - Metodi
+        - Implitic `this` argument
+    - Proprieta': campi con getter e setter
+        - Sintassi
+            - Auto-generati
+                ```css
+                public class Test {
+                    public string Caption {
+                        get; set;
+                    }
+                }
+                ```
+    - Indicizzatori (`operator[]` di C++)
+        - Proprieta' di nome `this`
+        - Sintassi
+            ```cs
+            public class ListBox: Control {
+                private string[] items;
+                public string this[int index] {
+                    get { return items[index]; }
+                    set {
+                        items[index] = value;
+                        Repaint();
+                    }
+                }
+            }
+            ```
+    - Eventi
+    - Operatori
+    - Costruttori
+    - Distruttori
+- `static` e non-`static`
+
+### Eventi
+- Keyword da aggiungere all'istanziazione di un tipo `delegate`
+    ```cs
+    event Handler myHandler;
+    ```
+- `+=`, `-=`, ma **non** `=`
+- [Comparison chart](https://techdifferences.com/difference-between-delegates-and-events-in-c-sharp.html)
+    | BASIS FOR COMPARISON | DELEGATES                                                 | EVENTS                                                              |
+    |----------------------|-----------------------------------------------------------|---------------------------------------------------------------------|
+    | Syntax               | `delegate return_type delegate_name(parameter_list);`       | `event event_delegate event_name;`                                    |
+    | Declaration          | A delegate is declared outside any class                 | An event is declared inside a class                                |
+
 # 19. WPF
 
 # 20. Multithreading in .NET e C#

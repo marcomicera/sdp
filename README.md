@@ -2242,13 +2242,13 @@ void consume() {
 - VM: CLR (*Common Language Runtime*)
     - Debug, eccezioni, type checks, JIT compilers
     - Common Type System: `Boolean`, `Byte`, `Char`, occupano sempre lo stesso spazio
-    - Garbage collector, stack wolker
+    - Garbage collector, stack walker
     - Esegue il *managed code*: codice utilizzato per la costruzione di applicazioni .NET
     - CIL: *Common Intermediate Language*
         1. Consente al programmatore di non conoscere l'architettura della macchina sottostante, e quindi della grandezza dei tipi
-        1. I compiler su VM gestiscono tutto su stack (stack-based execution) invece che nei registri (register-based execution), perche' non conoscono l'architettura fisica sottostante.
-        1. Operare con lo stack e' molto meno efficiente rispetto ai registri della CPU
-        1. Il JIT compiler puo' tradurre queste operazioni utilizzando i registri
+        1. **I compiler su VM gestiscono tutto su stack** (_stack-based execution_) invece che nei registri (register-based execution), perche' non conoscono l'architettura fisica sottostante.
+            - Operare con lo stack e' molto meno efficiente rispetto ai registri della CPU
+        1. **Il JIT compiler puo' tradurre queste operazioni utilizzando i registri**
 - Piattaforma Windows
 
 ### Hello world
