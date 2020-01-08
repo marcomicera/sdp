@@ -2572,7 +2572,12 @@ Hello, world!
             int j = 0;
 
             // Solo definizioni
-            del1 = () => j = 10; return j > input; }
+            del1 = () => {
+                
+                // `j` and `input` automatically captured by reference
+                j = 10;
+                return j > input;
+            }
             del2 = (x) => { return x == j; }
 
             bool result = del1();
@@ -2582,8 +2587,8 @@ Hello, world!
 
         public static void Main() {
             Test test = new Test();
-            test.method(5);
-            bool result = test.del2(10); // true
+            test.method(5); // `method` calls `del1` that sets `j` to 10
+            bool result = test.del2(10); // true, as previous method set `j` to 10
         }
     }
     ```
