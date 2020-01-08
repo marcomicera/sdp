@@ -532,6 +532,61 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     - Tramite in numero in Linux
     - Tramite una stringa in Windows
 
+### Sincronizzazione con oggetti kernel Windows
+- Stati oggetti kernel
+    - Segnalato (attivo)
+        - Quando ha terminato l'esecuzione
+    - Non segnalato (passivo)
+- `WaitForSingleObject()`
+    - Sospende il thread in case il kernel object non sia in *stato attivo*
+- `WaitForMultipleObjects()`
+- `Event`
+    - Non esiste in Unix
+    - Come le condition variable, il programma si blocca su un evento finche' non accade
+    - Tipi
+        - Manual-reset: rimane nello stato in cui si porta
+        - Auto-reset: lo stato viene resettato quando l'evento accade
+- `Semaphore`
+    - Stato segnalato se contatore > 0
+    - Stato non segnalato se contatore = 0
+    - Non puo' mai essere < 0
+- Mutex
+- Occorre chiamare `close(HANDLE)` alla fine del ciclo di vita di un oggetto kernel
+
+#### Mailslot
+- Event queue for IPC
+- Stesse API per la lettura dei file (ma sono bloccanti): `ReadFile(...)` e `ReadFileEx(...)`
+- `GetMailslotInfo(...)` restituisce:
+    - Il numero di messaggi
+    - La dimensione del primo messaggio da leggere
+
+#### Pipe
+- Anonymous pipe
+    - Monodirezionali
+    - Come le pipe Unix
+    - Tra due processi parenti
+        - E.g., `|` per `stdout` dentro un `stdin`
+    - Byte-oriented
+    - `ReadFile(...)` e `WriteFile(...)`
+    - Solo sincrone (bloccanti)
+- Named pipe
+    - Bidirezionali
+    - Non esistono in Unix
+    - Gestibili come file: `ReadFile()`, `WriteFile()`
+    - Read modes: byte-oriented **and** message-oriented
+    - Wait modes: bloccante o non bloccante (callback)
+
+#### File Mapping
+- Mappatura di una porzione del paging file nel proprio spazio di indirzzamento
+- Occorre sincronizzazione (e.g., mutex)
+- `CreateFileMapping(...)` crea un file mapping
+- `MapViewOfFile(...)` lo aggiunge allo spazio di indirizzamento e restituisce l'indirizzo di partenza
+- `UnmapViewOfFile(...)` e `CloseHandle(...)`
+
+#### Altri meccanismi
+- Socket
+- RPC
+
 # 17. Interprocess communication on Linux
 
 # 18. C# introduction

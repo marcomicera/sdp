@@ -1874,6 +1874,10 @@ void consume() {
     - Tramite una stringa in Windows
 
 ### Sincronizzazione con oggetti kernel Windows
+- Stati oggetti kernel
+    - Segnalato (attivo)
+        - Quando ha terminato l'esecuzione
+    - Non segnalato (passivo)
 - `WaitForSingleObject()`
     - Sospende il thread in case il kernel object non sia in *stato attivo*
 - `WaitForMultipleObjects()`
@@ -1886,10 +1890,6 @@ void consume() {
     // ...
     CloseHandle(handle): // da entrambi i processi
     ```
-- Stati
-    - Segnalato (attivo)
-        - Quando ha terminato l'esecuzione
-    - Non segnalato (passivo)
 - `Event`
     - Non esiste in Unix
     - Come le condition variable, il programma si blocca su un evento finche' non accade
