@@ -1,5 +1,6 @@
 # Course summary
 Brief summary of the entire course program.
+Complete notes available [here](../README.md).
 
 # Table of contents
 1. [Piattaforme di esecuzione](#1-piattaforme-di-esecuzione)
