@@ -2115,7 +2115,7 @@ void consume() {
         char messagetext [MESSAGESIZE];
     };
     ```
-- I processi che intendono comunicare si accordnao su:
+- I processi che intendono comunicare si accordano su:
     - Pathname di un file esistente
     - Project-ID (`0` to `255`)
 - API

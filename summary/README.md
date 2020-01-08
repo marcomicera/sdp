@@ -589,6 +589,23 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 # 17. Interprocess communication on Linux
 
+#### Message Queues
+- Equivalente del Mailslot di Windows
+- I processi che intendono comunicare si accordano su:
+    - Pathname di un file esistente
+    - Project-ID (`0` to `255`)
+
+#### Pipe
+- Equivalente delle anonymous pipes on Windows
+
+#### FIFO
+- Equivalente delle named pipes on Windows
+- Si accede come se fosse un file
+
+#### Shared Memory
+- Mappano dei blocchi di memoria negli spazi di indirizzamento
+- API
+
 # 18. C# introduction
 
 # 19. WPF
