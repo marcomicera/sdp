@@ -378,8 +378,6 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
         - Gestione sicura di oggetti polimorfici
         - `std::make_unique<BaseType>()`
 
-# 10. Librerie C++
-
 # 11. Librerie
 - L'uso di una libreria richiede due fasi
     1. Identificazione dei moduli necessari e loro caricamento in memoria
