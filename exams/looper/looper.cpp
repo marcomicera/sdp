@@ -1,8 +1,10 @@
+#include <iostream>
 #include <string>
 #include <queue>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <atomic>
 
 using namespace std;
 
@@ -36,25 +38,37 @@ private:
     queue<Message> message_queue;
     mutex m;
     condition_variable empty_queue;
+    atomic<bool> terminated;
 
 public:
 
-    Looper(Handler<Message> *handle) : handler(handle) {
-        looper_thread = thread([this]() {
+    Looper(Handler<Message> *handle) : handler(handle), terminated(false) {
+        looper_thread = move(thread([this]() {
             unique_lock<mutex> l(m);
-            empty_queue.wait(l, [this]() { return !(message_queue.size() == 0); });
-            handler->handle(message_queue.front());
-            message_queue.pop();
-        });
+            while (!terminated) {
+                empty_queue.wait(l, [this]() { return !(message_queue.size() == 0); });
+                handler->handle(message_queue.front());
+                message_queue.pop();
+            }
+        }));
     }
 
     ~Looper() {
-        looper_thread.join();
+        cout << "Looper destructor has been invoked..." << endl;
+        terminated = true;
+        empty_queue.notify_one();
+        if (looper_thread.joinable()) {
+            cout << "Looper destructor is joining the looper thread..." << endl;
+            looper_thread.join();
+        }
+        cout << "...Looper destructor terminated." << endl;
     }
 
     void send(Message msg) {
-        lock_guard<mutex> l(m);
-        message_queue.push(msg);
-        empty_queue.notify_one();
+        if (!terminated) {
+            lock_guard<mutex> l(m);
+            message_queue.push(msg);
+            empty_queue.notify_one();
+        }
     }
 };
