@@ -28,8 +28,12 @@ int main() {
 
     for (unsigned short thread_id = 0; thread_id < THREAD_POOL_SIZE; ++thread_id) {
         thread_pool.push_back(thread([&looper, thread_id]() {
-            looper.send(Message("thread " + to_string(thread_id) + " is in the house."));
+            looper.send(Message("thread " + to_string(thread_id) + " is in the house!"));
         }));
+    }
+
+    for (auto& t: thread_pool) {
+        t.join();
     }
 
     return 0;

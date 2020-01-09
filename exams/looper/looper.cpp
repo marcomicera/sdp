@@ -46,10 +46,11 @@ public:
         looper_thread = move(thread([this]() {
             unique_lock<mutex> l(m);
             while (!terminated) {
-                empty_queue.wait(l, [this]() { return !(message_queue.size() == 0); });
+                empty_queue.wait(l, [this]() { return !(message_queue.size() == 0 && !terminated); });
                 handler->handle(message_queue.front());
                 message_queue.pop();
             }
+            cout << "Looper thread is terminating..." << endl;
         }));
     }
 
@@ -61,7 +62,7 @@ public:
             cout << "Looper destructor is joining the looper thread..." << endl;
             looper_thread.join();
         }
-        cout << "...Looper destructor terminated." << endl;
+        cout << "...looper destructor terminated." << endl;
     }
 
     void send(Message msg) {
