@@ -373,6 +373,7 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
         - Copia o assegnazione
     - `NullPointerException` se inizializzato con `NULL`
     - Due campi: 64 bit, accesso due volte
+        - ![`shared_ptr` data structures](../images/shared_ptr.png)
         - Proprieta' condivisa `objectPtr`
         - Blocco di controllo `counterPtr`
             - `counter`, contatore dei riferimenti

@@ -1041,6 +1041,7 @@ Base2* b2;
         - Copia o assegnazione
     - `NullPointerException` se inizializzato con `NULL`
     - Due campi: 64 bit, accesso due volte
+        - ![`shared_ptr` data structures](images/shared_ptr.png)
         - Proprieta' condivisa `objectPtr`
         - Blocco di controllo `counterPtr`
             - `counter`, contatore dei riferimenti
