@@ -95,8 +95,52 @@ There are a lot of smarter alternatives for lots of these things
     ```
 
 ## Threading
-Useful when creating dummy main programs for testing purposes.
 
+### Encapsulated thread in class
+```cpp
+class Container {
+
+private:
+
+    atomic<bool> terminated;
+    thread thread;
+
+    queue<Message> queue;
+
+    mutex m;
+    condition_variable cv;
+
+public:
+
+    Looper(Handler<Message> *handle) : handler(handle), terminated(false) {
+        thread = move(thread([this]() {
+            unique_lock<mutex> l(m);
+            while (!terminated) {
+                cv.wait(l, [this]() { return !(queue.size() == 0 && !terminated); });
+                // ...
+            }
+        }));
+    }
+
+    ~Looper() {
+        terminated = true;
+        cv.notify_one();
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+
+    void send(Message msg) {
+        if (!terminated) { // if not `atomic`, must be protected by `lock_guard`
+            lock_guard<mutex> l(m);
+            queue.push(msg);
+            cv.notify_one();
+        }
+    }
+};
+```
+
+### Thread pool for testing purposes
 1. Thread pool
     ```cpp
     vector<thread> thread_pool;
@@ -104,9 +148,7 @@ Useful when creating dummy main programs for testing purposes.
 1. Creating threads
     ```cpp
     #define THREAD_POOL_SIZE 20
-    
-    // ...
-    
+
     for (unsigned short thread_id = 0; thread_id < THREAD_POOL_SIZE; ++thread_id) {
         thread_pool.push_back(thread([&data_structure, thread_id]() { /* `thread_id` by value! */
             unsigned short min = 0, max = 10;
