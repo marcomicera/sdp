@@ -675,6 +675,33 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     - Distruttori
 - `static` e non-`static`
 
+### Callback e `delegate`
+- Instanze di tipo `delegate` hanno una lista di subscribers (watchers)
+    - `+=` per aggiungersi alla lista, `-=` per levarsi, `=` per sovrascrivere la lista
+- Example
+    1. Tipo `delegate`
+        ```cs
+        delegate void Handler(string msg);
+        ```
+    1. Instanziazione del tipo `delegate`
+        ```cs
+        /** `Handler` accetta una funzione come parametro.
+         *  La funzione accetta come parametro una `string` e restituisce `void`.
+         *
+         *  L'invocazione di `myHandler` causa l'invocazione di `obj.someMethod`
+         *  e di tutte le altre callback assegnate.
+         */
+        Handler myHandler = new Handler(myObj.someMethod);
+
+        // Aggiunge una callback
+        myHandler += new Handler(anotherObj.doSomething);
+        myHandler += evenAnotherObject.methodName; // nuova sintassi
+        ```
+    1. Si invoca il delegato
+        ```cs
+        myHandler("Message description"); // vengono chiamate tutte le callbacks
+        ```
+
 ### Eventi
 - Keyword da aggiungere all'istanziazione di un tipo `delegate`
     ```cs

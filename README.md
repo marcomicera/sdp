@@ -134,7 +134,7 @@ Other courses notes on [marcomicera.github.io/mce](https://marcomicera.github.io
       - [Cosa memorizza il Garbage Collector per ogni variabile](#cosa-memorizza-il-garbage-collector-per-ogni-variabile)
     + [Classi](#classi)
     + [Interfacce](#interfacce)
-    + [Callback e delegate](#callback-e-delegate)
+    + [Callback e `delegate`](#callback-e-delegate)
     + [Eventi](#eventi)
     + [Lambda function](#lambda-function)
     + [Attributes](#attributes)
