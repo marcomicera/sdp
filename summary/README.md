@@ -71,6 +71,7 @@ R, W, X, [COW](https://en.wikipedia.org/wiki/Copy-on-write)
     - Lifecycle: da `malloc()` a `free()`
 
 ### Spazio di indirizzamento
+![Spazi di indirizzamento](../images/spazi_indirizzamento.png)
 - OS kernel space
 - Variabili d'ambiente
 - Codice eseguibile (R/X)
@@ -81,6 +82,22 @@ R, W, X, [COW](https://en.wikipedia.org/wiki/Copy-on-write)
 - Costanti (R)
 - Variabili globali (R/W)
 - Heap (variabili dinamiche)
+
+### Allocazione in Linux
+- `malloc()` effettua una syscall dell'O.S., i cui dettagli dipendono dall'implementazione
+- Ogni PCB (*Process Control Block*) contiene una `mm_struct` (*memory descriptor*), che contiene
+    - `start_brk`/`brk`: inizio/fine heap
+        - `int brk(void* end_data_segment);` sposta il puntatore di fine heap
+        - `void* sbrk(intptr_t increment);` puo' incrementare lo heap
+    - `start_stack`
+
+### Allocazione in Windows (multiple heaps)
+- `malloc()` usa il *global heap*
+- *Local heaps* management
+    - `HANDLE HeapCreate()`
+    - `void* HeapAlloc(HANDLE heap, DWORD options, SIZE_T s )`
+    - `BOOL HeapFree(Handle heap, DWORD options, void* ptr)`
+    - `BOOL HeapDestroy(HANDLE heap)`
 
 # 6. Composizione di oggetti
 

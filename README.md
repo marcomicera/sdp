@@ -307,6 +307,7 @@ La MMU ha, per ogni pagina, un bit di:
     - Inizializzate o non
 
 ### Spazio di indirizzamento
+![Spazi di indirizzamento](images/spazi_indirizzamento.png)
 - Diverse aree per garantire diversi tipi di accesso (R/W/X)
 - Accesso a locazioni non mappate
     - _Segmentation fault_ on Linux
