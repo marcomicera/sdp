@@ -568,6 +568,7 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     - Stato non segnalato se contatore = 0
     - Non puo' mai essere < 0
 - Mutex
+    - Equivalente ad un semaforo inizializzato ad 1
 - Occorre chiamare `close(HANDLE)` alla fine del ciclo di vita di un oggetto kernel
 
 #### Mailslot

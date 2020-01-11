@@ -1908,11 +1908,13 @@ void consume() {
     - Stato segnalato se contatore > 0
     - Stato non segnalato se contatore = 0
     - Non puo' mai essere < 0
+    - `Up()` incrementa, `Down()` decrementa
     - `WaitForSingleObject()` decrementa se > 0
     - `CreateSemaphore(...)` e `OpenSemaphore(...)`
     - `WaitForSingleObject()` e `WaitForMultipleObjects()`
     - `ReleaseSemaphore(...)`
 - Mutex
+    - Equivalente ad un semaforo inizializzato ad 1
     - Assicurano a piu' thread l'accesso in mutua esclusione
     - Con timeout
     - Conservano l'ID del thread che li ha acquisiti ed un contatore
