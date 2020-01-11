@@ -2503,22 +2503,17 @@ Hello, world!
 
         public event Handler Click;
 
-        protected void onClicked(/* ... */) {
-
-            // Copia in locale: in caso di accesso multithread
-            var clicked = Click;
-
+        protected void onClick() {
+            var clicked = Click; // in caso di accesso multithread
             if (clicked != null) {
-
-                // Solleva l'evento
-                clicked(this, new MouseEventArgs(/* ... */));
+                clicked(this, new MouseEventArgs(/* ... */)); // solleva l'evento
             }
         }
     }
 
     public class Test {
 
-        public static void MyHanlder(object sender, EventArgs e) {
+        public static void MyHandler(object sender, EventArgs e) {
             // React to event...
         }
 

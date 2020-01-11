@@ -715,6 +715,34 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     |----------------------|-----------------------------------------------------------|---------------------------------------------------------------------|
     | Syntax               | `delegate return_type delegate_name(parameter_list);`       | `event event_delegate event_name;`                                    |
     | Declaration          | A delegate is declared outside any class                 | An event is declared inside a class                                |
+- Esempio
+    ```cs
+    public delegate void Handler(object sender, EventArgs e);
+
+    public class Button {
+
+        public event Handler Click;
+
+        protected void onClick() {
+            var clicked = Click; // in caso di accesso multithread
+            if (clicked != null) {
+                clicked(this, new MouseEventArgs(/* ... */)); // solleva l'evento
+            }
+        }
+    }
+
+    public class Test {
+
+        public static void MyHandler(object sender, EventArgs e) {
+            // React to event...
+        }
+
+        public static void Main() {
+            Button b = new Button();
+            b.Click += new Handler(MyHandler);
+        }
+    }
+    ```
 
 # 19. WPF
 
