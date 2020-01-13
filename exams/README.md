@@ -162,3 +162,13 @@ public:
         t.join();
     }
     ```
+
+## Custom exceptions
+```cpp
+class CustomException: public exception {
+    string _cause;
+public:
+    explicit CustomException(const string& cause): _cause(cause) {}
+    const char* what() const throw() { return _cause.c_str(); }
+};
+```
