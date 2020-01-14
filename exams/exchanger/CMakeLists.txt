@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.9)
+project(exchanger)
+set(CMAKE_CXX_STANDARD 11)
+add_executable(${PROJECT_NAME} exchanger.cpp main.cpp)
+SET(CMAKE_CXX_FLAGS -pthread)
