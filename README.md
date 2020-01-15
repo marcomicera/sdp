@@ -39,6 +39,7 @@ Other courses notes on [marcomicera.github.io/mce](https://marcomicera.github.io
     + [Allocazione in Linux](#allocazione-in-linux)
     + [Allocazione in Windows (multiple heaps)](#allocazione-in-windows-multiple-heaps)
 4. [Introduzione al C++](#4-introduzione-al-c)
+    + [C++ compiler](#c-compiler)    
 5. [Gestione delle eccezioni](#5-gestione-delle-eccezioni)
 6. [Composizione di oggetti](#6-composizione-di-oggetti)
     + [Costruttore di copia](#costruttore-di-copia)
@@ -402,6 +403,9 @@ La MMU ha, per ogni pagina, un bit di:
         delete[] ptr;
         ptr = NULL;
         ```
+
+### C++ compiler
+- Gestisce il ciclo di vita delle variabili globali e locali
 
 # 5. Gestione delle eccezioni
 - `#include<std::exception>`

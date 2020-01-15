@@ -6,7 +6,7 @@ Complete notes available [here](../README.md).
 1. [Piattaforme di esecuzione](#1-piattaforme-di-esecuzione)
 2. [Il modello di esecuzione](#2-il-modello-di-esecuzione)
 3. [Allocazione della memoria](#3-allocazione-della-memoria)
-4. Introduzione al C++
+4. [Introduzione al C++](#4-introduzione-al-c)
 5. Gestione delle eccezioni
 6. [Composizione di oggetti](#6-composizione-di-oggetti)
 7. [Ereditarietà e polimorfismo](#7-ereditarietà-e-polimorfismo)
@@ -98,6 +98,11 @@ R, W, X, [COW](https://en.wikipedia.org/wiki/Copy-on-write)
     - `void* HeapAlloc(HANDLE heap, DWORD options, SIZE_T s )`
     - `BOOL HeapFree(Handle heap, DWORD options, void* ptr)`
     - `BOOL HeapDestroy(HANDLE heap)`
+
+# 4. Introduzione al C++
+
+### C++ compiler
+- Gestisce il ciclo di vita delle variabili globali e locali
 
 # 6. Composizione di oggetti
 
