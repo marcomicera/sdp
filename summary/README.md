@@ -456,9 +456,28 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 ### Esecuzione asincrona
 - Funzione `std::async()`
 - Funzione eseguita in un altro thread
+- Restituisce `std::future<T>`
+    - **E' solo movibile** (non e' copiabile)
+    - `get()` per il risultato
+        - Rilancia l'eccezione se il thread asincrono ne ha lanciata una
+        - Si blocca in attesa se l'operazione non e' finita
+        - Se l'esecuzione non e' iniziata, ne forza l'avvio
+        - Chiamabile una volta sola, altrimenti eccezione
+    - `wait()`
+        - Consente di non consumare il risultato subito, garantendo al chiamante della `get()` di ottenere qualcosa di significativo
+        - Chiamabile piu' volte
 - `std::launch::async` attiva sempre un thread secondario
     - `std::async` puo' non creare un thread se ci sono poche risorse
     - Pericoloso perche' lo stack viene copiato per ogni thread
+- `std::launch::deferred`
+    - Lazy evaluation upon calling `get()` or `wait()`
+    - Il sistema prova a creare un secondo thread, altrimenti segna l'attivita' come *deferred*
+- Il metodo `shared()` su un `std::future<T>` ritorna un `std::shared_future<T>`
+    - Puo' essere interrogato piu' di una volta
+    - Costa di piu' in termini di memoria
+    - Stessi metodi `get()`, etc.
+        - Invalida il `std::future<T>` originale
+    - E' anche copiabile
 
 ### `std::mutex`
 - `lock()` e `unlock()`

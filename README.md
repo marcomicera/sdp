@@ -1326,7 +1326,7 @@ C++ standardizza il concetto di thread in `std::thread`
     - Parametri per la funzione
 - Funzione eseguita in un altro thread
 - Restituisce `std::future<T>`
-    - E' solo movibile (non e' copiabile)
+    - **E' solo movibile** (non e' copiabile)
     - `get()` per il risultato
         - Rilancia l'eccezione se il thread asincrono ne ha lanciata una
         - Si blocca in attesa se l'operazione non e' finita
@@ -1368,13 +1368,13 @@ C++ standardizza il concetto di thread in `std::thread`
     - Lazy evaluation upon calling `get()` or `wait()`
     - Usato in caso di tante richieste simultanee
     - Il sistema prova a creare un secondo thread, altrimenti segna l'attivita' come *deferred*
-    - Il metodo `shared()` su un `std::future<T>` ritorna un `std::shared_future<T>`
-        - Puo' essere interrogato piu' di una volta
-            - Usato quando dev'essere utilizzato da piu' thread
-        - Costa di piu' in termini di memoria
-        - Stessi metodi `get()`, etc.
-            - Invalida il `std::future<T>` originale
-        - E' anche copiabile
+- Il metodo `shared()` su un `std::future<T>` ritorna un `std::shared_future<T>`
+    - Puo' essere interrogato piu' di una volta
+        - Usato quando dev'essere utilizzato da piu' thread
+    - Costa di piu' in termini di memoria
+    - Stessi metodi `get()`, etc.
+        - Invalida il `std::future<T>` originale
+    - E' anche copiabile
 
 ### `std::mutex`
 - `lock()` e `unlock()`
