@@ -802,10 +802,10 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 # 19. WPF
 
 ### Visual rendering
-- Immediate mode
+- GDI (vecchio WPF): immediate mode
     - Gli oggetti vengono (ri)disegnati invocando una callback dell'applicazione che si occupa del rendering
     - GDI non mantiene info sugli oggetti disegnati
-- Retained mode
+- WPF: **retained mode**
     - Ciascun oggetto contiene dati sul proprio rendering
     - Il sistema grafico mantiene la gerarchia degli oggetti grafici
 
@@ -818,6 +818,7 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 - Rendering thread e UI thread accedono alla coda del Dispatcher
     - **Tutti** gli oggetti WPF hanno accesso al Dispatcher perche' derivano da `DispatcherObject`
 - `Invoke()`: sincrono, bloccante
+    - Aspettando il rendering thread
 - `BeginInvoke()`: asincrono, non bloccante
 
 ### `DependencyProperty`

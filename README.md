@@ -2609,12 +2609,15 @@ Hello, world!
     ```
 
 # 19. WPF
+- Windows Presentation Foundation
+- Interamente su vettoriale
+- Motore grafico DirectX
 
 ### Visual rendering
-- Immediate mode
+- GDI (vecchio WPF): immediate mode
     - Gli oggetti vengono (ri)disegnati invocando una callback dell'applicazione che si occupa del rendering
     - GDI non mantiene info sugli oggetti disegnati
-- Retained mode
+- WPF: **retained mode**
     - Ciascun oggetto contiene dati sul proprio rendering
     - Il sistema grafico mantiene la gerarchia degli oggetti grafici
 
@@ -2632,6 +2635,7 @@ Hello, world!
 - Rendering thread e UI thread accedono alla coda del Dispatcher
     - **Tutti** gli oggetti WPF hanno accesso al Dispatcher perche' derivano da `DispatcherObject`
 - `Invoke()`: sincrono, bloccante
+    - Aspettando il rendering thread
 - `BeginInvoke()`: asincrono, non bloccante
 - Slow job example
     ```cs
