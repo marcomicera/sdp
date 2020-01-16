@@ -539,6 +539,26 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 # 15. Condition variables
 - Richiede l'uso di un `std::unique_lock<Lockable>`
 
+### Lazy evaluation: the Singleton pattern
+- In un ambiente multi-threaded, un Singleton non assicura la sua proprieta' di singola istanza
+- `std::once_flag` e `std::call_once()`
+    ```cpp
+    #inlcude <mutex>
+
+    class Singleton {
+        static Singleton *instance;
+        static std::once_flag inited;
+        Singleton() {}
+    public:
+        static Singleton *getInstance() {
+            std::call_once(inited, [] () {
+                instance = new Singleton();
+            })
+            return instance;
+        }
+    };
+    ```
+
 # 16. Interprocess communication on Windows
 - I processi, al contrario dei thread, non condividono lo spazio di indirizzamento
 
