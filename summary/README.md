@@ -496,6 +496,9 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 - Accesso in modo atomico a `T`
     - Internamente implementato con uno spinlock
 - Migliore del `std::mutex` per dati elementari
+- `load()`, `store()`, `operator++()` per numeri
+- `fetch_add(val)` e `fetch_sub(val)` per `+=` e `-=` rispettivamente
+- `exchange(val)` per lo scambio di valori
 
 # 14. Threads
 
