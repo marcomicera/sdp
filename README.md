@@ -1268,6 +1268,7 @@ Base2* b2;
             }
             ```
     - `extern c` per evitare il name mangling del compiler
+        - Name mangling: il compilatore sporca il nome delle funzioni col fine di permetterne l'overloading
         ```cpp
         // SampleDLL.def
         LIBRARY "sampleDLL"
