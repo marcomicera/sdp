@@ -385,6 +385,8 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
             - `weakCnt`
             - `objectPtr`, per distruttore
     - Non supporta dipendenze cicliche
+    - `get()` restituisce una copia del puntatore nativo
+    - `reset()` decrementa il contatore ed elimina il riferimento
 - `std::weak_ptr<BaseType>`
     - Senza conteggio di riferimenti = cicli
     - Si crea a partire da uno `shared_ptr`
@@ -535,6 +537,15 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     - One `std::promise<T>` object for each intermediate results
     - Un `std::promise<T>` ha associato un `std::future<T>`
         - Il chiamante puo' quindi chiamare la `get_future().get()`
+
+##### `promise` vs `future`
+
+|           | `future`                                         | `promise`                                                        |
+|-----------|--------------------------------------------------|------------------------------------------------------------------|
+|           |                                                  | Contiene una `future`                                            |
+| Usage     | Producer                                         | Consuer                                                          |
+| Result    | Variabile condivisa nascosta, gestione implicita | Variabile condivisa passata come riferimento, gestione esplicita |
+| Eccezioni | Ritorna al chiamante                             | Blocco try-catch nel thread                                      |
 
 # 15. Condition variables
 - Richiede l'uso di un `std::unique_lock<Lockable>`

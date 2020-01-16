@@ -99,6 +99,7 @@ Other courses notes on [marcomicera.github.io/mce](https://marcomicera.github.io
       - [Come terminare un thread](#come-terminare-un-thread)
       - [Thread lifecycle in RAII](#thread-lifecycle-in-raii)
       - [Retrieve results while secondary thread is still running](#retrieve-results-while-secondary-thread-is-still-running)
+        * [`promise` vs `future`](#promise-vs-future)
     + [Accedere al thread corrente](#accedere-al-thread-corrente)
 15. [Condition variables](#15-condition-variables)
     + [Intro](#intro)
@@ -1648,6 +1649,15 @@ public:
         - *BlockingQueue* di dati per thread
         - `submit(std::packaged_task<T(Args)> t)`
         - `quit()` sul thread pool termina tutti i threads
+
+##### `promise` vs `future`
+
+|           | `future`                                         | `promise`                                                        |
+|-----------|--------------------------------------------------|------------------------------------------------------------------|
+|           |                                                  | Contiene una `future`                                            |
+| Usage     | Producer                                         | Consuer                                                          |
+| Result    | Variabile condivisa nascosta, gestione implicita | Variabile condivisa passata come riferimento, gestione esplicita |
+| Eccezioni | Ritorna al chiamante                             | Blocco try-catch nel thread                                      |
 
 ### Accedere al thread corrente
 - Namespace `std::this_thread`
