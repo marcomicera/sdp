@@ -564,6 +564,13 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 ### Processi in Windows
 - `CreateProcess(...)`
+- Cosa puo' essere ereditato:
+    - Environment variables
+    - Oggetti kernel (file handles, semaphores, pipes) a patto che siano stati creati con un flag apposito
+- Cosa non puo' essere ereditato:
+    - Handle a thread/processi
+    - Librerie dinamiche
+    - Regioni di memoria
 
 ### Processi in Linux
 - `fork()`
@@ -793,6 +800,14 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     ```
 
 # 19. WPF
+
+### Visual rendering
+- Immediate mode
+    - Gli oggetti vengono (ri)disegnati invocando una callback dell'applicazione che si occupa del rendering
+    - GDI non mantiene info sugli oggetti disegnati
+- Retained mode
+    - Ciascun oggetto contiene dati sul proprio rendering
+    - Il sistema grafico mantiene la gerarchia degli oggetti grafici
 
 ### WPF threads
 - Rendering thread
