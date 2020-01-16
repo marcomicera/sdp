@@ -1482,6 +1482,7 @@ C++ standardizza il concetto di thread in `std::thread`
 
 ### Creazione di thread secondari
 - `std::thread`
+- **Non copiabile, solo movibile**
 - Il costruttore accetta un `Callable`
     - Funzione
     - Lamba expression

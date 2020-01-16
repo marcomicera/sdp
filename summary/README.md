@@ -501,6 +501,7 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 
 ### Creazione di thread secondari
 - `std::thread`
+- **Non copiabile, solo movibile**
 - Inizia subito ad eseguire
 - Differenza tra `std::thread` e `std::async`
     - `std::async` puo' essere attivato in modalita' lazy, con `std::thread` no
