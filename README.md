@@ -134,6 +134,7 @@ Other courses notes on [marcomicera.github.io/mce](https://marcomicera.github.io
     + [Sintassi](#sintassi)
       - [Cosa memorizza il Garbage Collector per ogni variabile](#cosa-memorizza-il-garbage-collector-per-ogni-variabile)
     + [Classi](#classi)
+      - [`struct` vs. `class`](#struct-vs-class)
     + [Interfacce](#interfacce)
     + [Callback e `delegate`](#callback-e-delegate)
     + [Eventi](#eventi)
@@ -2441,6 +2442,15 @@ Hello, world!
     - Costruttori
     - Distruttori
 - `static` e non-`static`
+
+#### `struct` vs. `class`
+
+|                                           | `class`                | `struct`                                 |
+|-------------------------------------------|------------------------|------------------------------------------|
+| Ereditarieta'                             | Classi + interfacce    | Interfacce                               |
+| Allocazione                               | Heap                   | Stack (gestione memoria piu' efficiente) |
+| Costruttore puo' allocare memoria in heap | Si'                    | No                                       |
+| Copia                                     | Puntatore della classe | Copia dei contenuti                      |
 
 ### Interfacce
 - Possono definire:

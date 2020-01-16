@@ -732,6 +732,15 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
     - Distruttori
 - `static` e non-`static`
 
+#### `struct` vs. `class`
+
+|                                           | `class`                | `struct`                                 |
+|-------------------------------------------|------------------------|------------------------------------------|
+| Ereditarieta'                             | Classi + interfacce    | Interfacce                               |
+| Allocazione                               | Heap                   | Stack (gestione memoria piu' efficiente) |
+| Costruttore puo' allocare memoria in heap | Si'                    | No                                       |
+| Copia                                     | Puntatore della classe | Copia dei contenuti                      |
+
 ### Callback e `delegate`
 - Instanze di tipo `delegate` hanno una lista di subscribers (watchers)
     - `+=` per aggiungersi alla lista, `-=` per levarsi, `=` per sovrascrivere la lista
