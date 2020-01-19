@@ -550,7 +550,7 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 # 15. Condition variables
 - Richiede l'uso di un `std::unique_lock<Lockable>`
 
-### Lazy evaluation: the Singleton pattern
+### The Singleton pattern in a multi-threaded environment
 - In un ambiente multi-threaded, un Singleton non assicura la sua proprieta' di singola istanza
 - `std::once_flag` e `std::call_once()`
     ```cpp

@@ -106,7 +106,7 @@ Other courses notes on [marcomicera.github.io/mce](https://marcomicera.github.io
     + [Info](#info)
     + [Esempio](#esempio)
     + [Cosa serve per il problema produttore/consumatore](#cosa-serve-per-il-problema-produttoreconsumatore)
-    + [Lazy evaluation: the Singleton pattern](#lazy-evaluation-the-singleton-pattern)
+    + [The Singleton pattern in a multi-threaded environment](#the-singleton-pattern-in-a-multi-threaded-environment)
 16. [Interprocess communication on Windows](#16-interprocess-communication-on-windows)
     + [Processi in Windows](#processi-in-windows)
     + [Processi in Linux](#processi-in-linux)
@@ -1792,7 +1792,7 @@ void consume() {
     ```
 - `wait_for(duration)` e `wait_until(time_point)`
 
-### Lazy evaluation: the Singleton pattern
+### The Singleton pattern in a multi-threaded environment
 - Lazy expression da eseguire una volta sola
 - In un ambiente multi-threaded, un Singleton non assicura la sua proprieta' di singola istanza
 - `std::once_flag` e `std::call_once()`
