@@ -5,6 +5,7 @@ Course held by Prof. Malnati, summer 2018.
 - [Exams](exams)
     - [Tips & tricks](exams/README.md)
 - [Summary](summary/README.md)
+    - [Language-specific](lang-specific/README.md)
 - [Slides](slides)
 - [O.S. books](http://www.os-book.com/)
 
