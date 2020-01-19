@@ -543,7 +543,7 @@ Le classi con almeno un metodo `virtual` hanno un puntatore aggiuntivo che punta
 |           | `future`                                         | `promise`                                                        |
 |-----------|--------------------------------------------------|------------------------------------------------------------------|
 |           |                                                  | Contiene una `future`                                            |
-| Usage     | Producer                                         | Consuer                                                          |
+| Usage     | Producer                                         | Consumer                                                          |
 | Result    | Variabile condivisa nascosta, gestione implicita | Variabile condivisa passata come riferimento, gestione esplicita |
 | Eccezioni | Ritorna al chiamante                             | Blocco try-catch nel thread                                      |
 

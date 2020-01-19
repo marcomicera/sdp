@@ -1113,7 +1113,18 @@ Base2* b2;
 #### Standard Template Library
 - `std::set` richiede l'implementazione di `operator<()`
 - Iterators
-    - Gli iteratori sono sottoclassi dei containers (`vector`, `list`, etc.)
+    - Gli iteratori sono sottoclassi dei containers    - Non copiabile, ne' assegnabile
+        - Nessuna struttura di controllo dei conteggi
+    - Movibile per
+        - Costruzione
+        - Operatori di movimento
+            - Trasferito ad un altro `unique_ptr`
+            - Esplicitamente con `std::move()`
+    - Usi
+        - Garantire la distruzione di un oggetto
+        - Gestione sicura di oggetti polimorfici
+        - `std::make_unique<BaseType>()`
+ (`vector`, `list`, etc.)
     - Esempio
         ```cpp
         class C;
@@ -1655,7 +1666,7 @@ public:
 |           | `future`                                         | `promise`                                                        |
 |-----------|--------------------------------------------------|------------------------------------------------------------------|
 |           |                                                  | Contiene una `future`                                            |
-| Usage     | Producer                                         | Consuer                                                          |
+| Usage     | Producer                                         | Consumer                                                          |
 | Result    | Variabile condivisa nascosta, gestione implicita | Variabile condivisa passata come riferimento, gestione esplicita |
 | Eccezioni | Ritorna al chiamante                             | Blocco try-catch nel thread                                      |
 
