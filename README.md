@@ -9,7 +9,7 @@ Course held by Prof. Malnati, summer 2018.
 - [Slides](slides)
 - [O.S. books](http://www.os-book.com/)
 
-Other courses notes on [marcomicera.github.io/mce](https://marcomicera.github.io/mce).
+Other course notes available at [marcomicera.github.io/mce](https://marcomicera.github.io/mce).
 
 # Table of contents
 1. [Piattaforme di esecuzione](#1-piattaforme-di-esecuzione)
